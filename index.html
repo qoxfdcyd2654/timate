@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timate</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle, #c5e88a 0%, #8dc63f 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .timate-container {
+            width: 1200px;
+            max-width: 95%;
+            height: 90vh;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar {
+            width: 320px;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .sidebar-header {
+            background: #8dc63f;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .sidebar-header h2 {
+            color: white;
+            font-size: 26px;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-header p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+        }
+
+        .current-user {
+            padding: 15px;
+            background: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #9b59b6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .user-status {
+            font-size: 12px;
+            color: #2ecc71;
+        }
+
+        .search-box {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .search-box input:focus {
+            border-color: #9b59b6;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            background: #f8f9fa;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .tab.active {
+            background: white;
+            color: #9b59b6;
+            border-bottom: 2px solid #9b59b6;
+        }
+
+        .contacts-list, .users-list {
+            flex: 1;
+            overflow-y: auto;
+            background: white;
+        }
+
+        .contact-item, .user-item {
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .contact-item:hover, .user-item:hover {
+            background: #f8f9fa;
+        }
+
+        .contact-item.active {
+            background: #f3e5f5;
+            border-left: 3px solid #9b59b6;
+        }
+
+        .contact-avatar, .user-avatar-small {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .contact-info, .user-info-small {
+            flex: 1;
+        }
+
+        .contact-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .contact-status {
+            font-size: 11px;
+        }
+
+        .contact-status.online {
+            color: #2ecc71;
+        }
+
+        .contact-status.offline {
+            color: #999;
+        }
+
+        .add-btn {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-header-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .chat-header-info h3 {
+            color: #2c3e50;
+            font-size: 18px;
+        }
+
+        .chat-header-info p {
+            font-size: 12px;
+            color: #2ecc71;
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message {
+            display: flex;
+        }
+
+        .message.out {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 65%;
+            padding: 10px 14px;
+            border-radius: 18px;
+        }
+
+        .message.in .message-bubble {
+            background: white;
+            color: #2c3e50;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .message.out .message-bubble {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-text {
+            word-wrap: break-word;
+            font-size: 14px;
+        }
+
+        .message-time {
+            font-size: 10px;
+            margin-top: 5px;
+            opacity: 0.7;
+            text-align: right;
+        }
+
+        .input-area {
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 12px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .input-area input:focus {
+            border-color: #9b59b6;
+        }
+
+        .input-area button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .login-screen {
+            width: 400px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 28px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .login-screen h1 {
+            color: #8dc63f;
+            margin-bottom: 8px;
+            font-size: 32px;
+        }
+
+        .login-screen p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .login-screen input {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 10px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .login-screen input:focus {
+            border-color: #9b59b6;
+        }
+
+        .login-screen input.error {
+            border-color: #e74c3c;
+            background-color: #fff5f5;
+        }
+
+        .login-screen button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .switch-mode {
+            margin-top: 15px;
+            color: #9b59b6;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .switch-mode:hover {
+            text-decoration: underline;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+        (function() {
+            const SUPABASE_URL = 'https://eiqtdlzsupmaaycwvjhp.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpcXRkbHpzdXBtYWF5Y3d2amhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MjgxOTAsImV4cCI6MjA5MDIwNDE5MH0.IHU21Y-pzzWEOQGU28UanSI0nrjGgstc45HWDRyGuIg';
+            
+            const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            
+            let currentUser = null;
+            let currentContact = null;
+            let messagesSubscription = null;
+            let isLoginMode = true; // true = вход, false = регистрация
+            
+            // ========== ЭКРАН ВХОДА/РЕГИСТРАЦИИ ==========
+            async function showAuth() {
+                document.getElementById('app').innerHTML = `
+                    <div class="login-screen">
+                        <h1>💚 Timate</h1>
+                        <p>${isLoginMode ? 'вход в аккаунт' : 'создание аккаунта'}</p>
+                        <input type="text" id="authUsername" placeholder="Имя пользователя">
+                        <input type="text" id="authDisplayName" placeholder="Отображаемое имя" style="${isLoginMode ? 'display:none' : 'display:block'}">
+                        <input type="password" id="authPassword" placeholder="Пароль">
+                        <input type="password" id="authConfirmPassword" placeholder="Повторите пароль" style="${isLoginMode ? 'display:none' : 'display:block'}">
+                        <button onclick="window.submitAuth()">${isLoginMode ? 'Войти' : 'Зарегистрироваться'}</button>
+                        <div class="switch-mode" onclick="window.switchAuthMode()">
+                            ${isLoginMode ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'}
+                        </div>
+                        <div id="authError" class="error"></div>
+                    </div>
+                `;
+            }
+            
+            window.switchAuthMode = function() {
+                isLoginMode = !isLoginMode;
+                showAuth();
+            };
+            
+            function showAuthError(msg) {
+                const errorDiv = document.getElementById('authError');
+                if (errorDiv) {
+                    errorDiv.textContent = msg;
+                    setTimeout(() => errorDiv.textContent = '', 3000);
+                }
+            }
+            
+            function clearInputErrors() {
+                document.querySelectorAll('.login-screen input').forEach(input => {
+                    input.classList.remove('error');
+                });
+            }
+            
+            function highlightEmptyFields(fields) {
+                fields.forEach(fieldId => {
+                    const input = document.getElementById(fieldId);
+                    if (input && !input.value.trim()) {
+                        input.classList.add('error');
+                    }
+                });
+            }
+            
+            window.submitAuth = async function() {
+                clearInputErrors();
+                
+                const username = document.getElementById('authUsername').value.trim();
+                const password = document.getElementById('authPassword').value;
+                const displayName = document.getElementById('authDisplayName')?.value.trim() || username;
+                const confirmPassword = document.getElementById('authConfirmPassword')?.value;
+                
+                // Проверка на пустые поля
+                const requiredFields = isLoginMode 
+                    ? ['authUsername', 'authPassword']
+                    : ['authUsername', 'authDisplayName', 'authPassword', 'authConfirmPassword'];
+                
+                const emptyFields = requiredFields.filter(fieldId => {
+                    const input = document.getElementById(fieldId);
+                    return !input || !input.value.trim();
+                });
+                
+                if (emptyFields.length > 0) {
+                    highlightEmptyFields(emptyFields);
+                    showAuthError('❌ Заполните все поля');
+                    return;
+                }
+                
+                if (!isLoginMode && password !== confirmPassword) {
+                    showAuthError('❌ Пароли не совпадают');
+                    document.getElementById('authPassword').classList.add('error');
+                    document.getElementById('authConfirmPassword').classList.add('error');
+                    return;
+                }
+                
+                if (password.length < 3) {
+                    showAuthError('❌ Пароль должен быть не менее 3 символов');
+                    document.getElementById('authPassword').classList.add('error');
+                    return;
+                }
+                
+                if (isLoginMode) {
+                    // ВХОД
+                    const { data: user, error } = await supabaseClient
+                        .from('users')
+                        .select('*')
+                        .eq('username', username)
+                        .single();
+                    
+                    if (!user || user.password !== password) {
+                        showAuthError('❌ Неверное имя пользователя или пароль');
+                        document.getElementById('authUsername').classList.add('error');
+                        document.getElementById('authPassword').classList.add('error');
+                        return;
+                    }
+                    
+                    currentUser = user;
+                    await supabaseClient.from('users').update({ status: 'online' }).eq('id', currentUser.id);
+                    await loadMainScreen();
+                    
+                } else {
+                    // РЕГИСТРАЦИЯ
+                    const { data: existing } = await supabaseClient
+                        .from('users')
+                        .select('*')
+                        .eq('username', username)
+                        .single();
+                    
+                    if (existing) {
+                        showAuthError('❌ Пользователь с таким именем уже существует');
+                        document.getElementById('authUsername').classList.add('error');
+                        return;
+                    }
+                    
+                    const { data: newUser, error } = await supabaseClient
+                        .from('users')
+                        .insert({
+                            username: username,
+                            display_name: displayName,
+                            password: password,
+                            avatar_color: '#9b59b6',
+                            status: 'online'
+                        })
+                        .select()
+                        .single();
+                    
+                    if (error) {
+                        showAuthError('❌ Ошибка регистрации: ' + error.message);
+                        return;
+                    }
+                    
+                    currentUser = newUser;
+                    await loadMainScreen();
+                }
+            };
+            
+            async function loadMainScreen() {
+                document.getElementById('app').innerHTML = `
+                    <div class="timate-container">
+                        <div class="sidebar">
+                            <div class="sidebar-header"><h2>Timate</h2><p>💚 салатовый мессенджер</p></div>
+                            <div class="current-user">
+                                <div class="user-avatar">${(currentUser.display_name || currentUser.username).charAt(0).toUpperCase()}</div>
+                                <div class="user-info">
+                                    <div class="user-name">${escapeHtml(currentUser.display_name || currentUser.username)}</div>
+                                    <div class="user-status">🟢 онлайн</div>
+                                </div>
+                            </div>
+                            <div class="search-box">
+                                <input type="text" id="searchInput" placeholder="🔍 Поиск пользователей..." oninput="window.searchUsers()">
+                            </div>
+                            <div class="tabs">
+                                <div class="tab active" onclick="window.switchTab('contacts')">📱 Контакты</div>
+                                <div class="tab" onclick="window.switchTab('users')">🌍 Все пользователи</div>
+                            </div>
+                            <div id="contactsList" class="contacts-list"><div class="empty-state">Загрузка...</div></div>
+                            <div id="usersList" class="users-list" style="display: none;"></div>
+                        </div>
+                        <div class="chat-area" id="chatArea">
+                            <div class="empty-state">💬 Выберите контакт для общения</div>
+                        </div>
+                    </div>
+                `;
+                
+                await loadContacts();
+                await loadAllUsers();
+                setupRealtime();
+            }
+            
+            async function loadContacts() {
+                const { data: contacts } = await supabaseClient
+                    .from('contacts')
+                    .select(`contact_id, nickname, users:contact_id(id, username, display_name, avatar_color, status)`)
+                    .eq('user_id', currentUser.id);
+                
+                const container = document.getElementById('contactsList');
+                if (!contacts || contacts.length === 0) {
+                    container.innerHTML = '<div class="empty-state">📭 Нет контактов. Добавьте друзей через поиск!</div>';
+                    return;
+                }
+                
+                container.innerHTML = contacts.map(c => {
+                    const u = c.users;
+                    return `<div class="contact-item" onclick="window.selectContact('${u.id}')" data-contact-id="${u.id}">
+                        <div class="contact-avatar" style="background: ${u.avatar_color || '#9b59b6'}">${(u.display_name || u.username).charAt(0).toUpperCase()}</div>
+                        <div class="contact-info">
+                            <div class="contact-name">${escapeHtml(c.nickname || u.display_name || u.username)}</div>
+                            <div class="contact-status ${u.status === 'online' ? 'online' : 'offline'}">${u.status === 'online' ? '🟢 онлайн' : '⚫ офлайн'}</div>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+            
+            async function loadAllUsers() {
+                const { data: users } = await supabaseClient.from('users').select('*').neq('id', currentUser.id);
+                const container = document.getElementById('usersList');
+                if (!users || users.length === 0) {
+                    container.innerHTML = '<div class="empty-state">👥 Нет других пользователей</div>';
+                    return;
+                }
+                
+                const { data: contacts } = await supabaseClient.from('contacts').select('contact_id').eq('user_id', currentUser.id);
+                const contactIds = new Set(contacts?.map(c => c.contact_id) || []);
+                
+                container.innerHTML = users.map(u => `
+                    <div class="user-item">
+                        <div class="user-avatar-small" style="background: ${u.avatar_color || '#9b59b6'}">${(u.display_name || u.username).charAt(0).toUpperCase()}</div>
+                        <div class="user-info-small">
+                            <div class="contact-name">${escapeHtml(u.display_name || u.username)}</div>
+                            <div style="font-size:11px;color:#999;">@${escapeHtml(u.username)}</div>
+                        </div>
+                        ${!contactIds.has(u.id) ? `<button class="add-btn" onclick="window.addContact('${u.id}')">➕ Добавить</button>` : '<span style="font-size:12px;color:#8dc63f;">✓ в контактах</span>'}
+                    </div>
+                `).join('');
+            }
+            
+            window.searchUsers = async function() {
+                const query = document.getElementById('searchInput').value.toLowerCase();
+                if (!query) { loadAllUsers(); return; }
+                
+                const { data: users } = await supabaseClient.from('users').select('*').neq('id', currentUser.id).or(`username.ilike.%${query}%,display_name.ilike.%${query}%`);
+                const container = document.getElementById('usersList');
+                if (!users || users.length === 0) { container.innerHTML = '<div class="empty-state">🔍 Ничего не найдено</div>'; return; }
+                
+                const { data: contacts } = await supabaseClient.from('contacts').select('contact_id').eq('user_id', currentUser.id);
+                const contactIds = new Set(contacts?.map(c => c.contact_id) || []);
+                
+                container.innerHTML = users.map(u => `
+                    <div class="user-item">
+                        <div class="user-avatar-small" style="background: ${u.avatar_color || '#9b59b6'}">${(u.display_name || u.username).charAt(0).toUpperCase()}</div>
+                        <div class="user-info-small">
+                            <div class="contact-name">${escapeHtml(u.display_name || u.username)}</div>
+                            <div style="font-size:11px;color:#999;">@${escapeHtml(u.username)}</div>
+                        </div>
+                        ${!contactIds.has(u.id) ? `<button class="add-btn" onclick="window.addContact('${u.id}')">➕ Добавить</button>` : '<span style="font-size:12px;color:#8dc63f;">✓ в контактах</span>'}
+                    </div>
+                `).join('');
+            };
+            
+            window.addContact = async function(contactId) {
+                await supabaseClient.from('contacts').insert({ user_id: currentUser.id, contact_id: contactId });
+                await loadContacts();
+                await loadAllUsers();
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) searchInput.value = '';
+            };
+            
+            window.selectContact = async function(contactId) {
+                currentContact = contactId;
+                document.querySelectorAll('.contact-item').forEach(el => el.classList.remove('active'));
+                const activeEl = document.querySelector(`.contact-item[data-contact-id="${contactId}"]`);
+                if (activeEl) activeEl.classList.add('active');
+                await loadMessages();
+                await renderChat();
+            };
+            
+            async function loadMessages() {
+                if (!currentContact) return;
+                const { data: messages } = await supabaseClient.from('messages').select('*').or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${currentContact}),and(from_user_id.eq.${currentContact},to_user_id.eq.${currentUser.id})`).order('created_at');
+                window.currentMessages = messages || [];
+                await supabaseClient.from('messages').update({ is_read: true }).eq('from_user_id', currentContact).eq('to_user_id', currentUser.id).eq('is_read', false);
+            }
+            
+            async function renderChat() {
+                if (!currentContact) return;
+                const { data: contact } = await supabaseClient.from('users').select('*').eq('id', currentContact).single();
+                const chatArea = document.getElementById('chatArea');
+                const messages = window.currentMessages || [];
+                
+                chatArea.innerHTML = `
+                    <div class="chat-header">
+                        <div class="chat-header-avatar" style="background: ${contact?.avatar_color || '#9b59b6'}">${(contact?.display_name || contact?.username || '?').charAt(0).toUpperCase()}</div>
+                        <div class="chat-header-info"><h3>${escapeHtml(contact?.display_name || contact?.username)}</h3><p>${contact?.status === 'online' ? '🟢 онлайн' : '⚫ офлайн'}</p></div>
+                    </div>
+                    <div class="messages-container" id="messagesContainer">
+                        ${messages.length === 0 ? '<div class="empty-state">💬 Нет сообщений</div>' : messages.map(msg => `
+                            <div class="message ${msg.from_user_id === currentUser.id ? 'out' : 'in'}">
+                                <div class="message-bubble">
+                                    <div class="message-text">${escapeHtml(msg.content)}</div>
+                                    <div class="message-time">${new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="input-area">
+                        <input type="text" id="messageInput" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') window.sendMessage()">
+                        <button onclick="window.sendMessage()">📤 Отправить</button>
+                    </div>
+                `;
+                const container = document.getElementById('messagesContainer');
+                if (container) container.scrollTop = container.scrollHeight;
+            }
+            
+            window.sendMessage = async function() {
+                const input = document.getElementById('messageInput');
+                const content = input.value.trim();
+                if (!content || !currentContact) return;
+                await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, to_user_id: currentContact, content });
+                input.value = '';
+                await loadMessages();
+                await renderChat();
+            };
+            
+            function setupRealtime() {
+                if (messagesSubscription) messagesSubscription.unsubscribe();
+                messagesSubscription = supabaseClient.channel('messages-channel').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
+                    const msg = payload.new;
+                    if ((msg.from_user_id === currentContact && msg.to_user_id === currentUser.id) || (msg.from_user_id === currentUser.id && msg.to_user_id === currentContact)) {
+                        await loadMessages();
+                        await renderChat();
+                    }
+                }).subscribe();
+            }
+            
+            window.switchTab = function(tab) {
+                const contactsList = document.getElementById('contactsList');
+                const usersList = document.getElementById('usersList');
+                const tabs = document.querySelectorAll('.tab');
+                tabs.forEach((t, i) => {
+                    t.classList.remove('active');
+                    if ((tab === 'contacts' && i === 0) || (tab === 'users' && i === 1)) t.classList.add('active');
+                });
+                if (tab === 'contacts') {
+                    contactsList.style.display = 'block';
+                    usersList.style.display = 'none';
+                } else {
+                    contactsList.style.display = 'none';
+                    usersList.style.display = 'block';
+                    loadAllUsers();
+                }
+            };
+            
+            function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+            
+            window.addEventListener('beforeunload', async () => { if(currentUser) await supabaseClient.from('users').update({ status: 'offline' }).eq('id', currentUser.id); });
+            
+            showAuth();
+        })();
+    </script>
+</body>
+</html>
