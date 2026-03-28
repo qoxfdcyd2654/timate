@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Timate</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -68,8 +68,6 @@
         .user-name { font-weight: bold; color: #2c3e50; }
         .user-status { font-size: 12px; color: #2ecc71; }
         .user-status i { font-size: 8px; margin-right: 4px; }
-        .user-phone { font-size: 10px; color: #999; margin-top: 2px; }
-        .user-bio { font-size: 11px; color: #666; margin-top: 2px; font-style: italic; }
         .settings-btn, .logout-btn {
             background: none;
             border: none;
@@ -97,7 +95,6 @@
             outline: none;
             font-size: 14px;
         }
-        .search-box input:focus { border-color: #9b59b6; }
         .tabs {
             display: flex;
             border-bottom: 1px solid #eee;
@@ -118,12 +115,12 @@
             color: #9b59b6;
             border-bottom: 2px solid #9b59b6;
         }
-        .contacts-list, .users-list, .chats-list, .public-channels-list {
+        .contacts-list, .users-list, .chats-list {
             flex: 1;
             overflow-y: auto;
             background: white;
         }
-        .contact-item, .user-item, .chat-item, .channel-item {
+        .contact-item, .user-item, .chat-item {
             padding: 12px 15px;
             display: flex;
             align-items: center;
@@ -132,12 +129,12 @@
             border-bottom: 1px solid #f5f5f5;
             transition: background 0.2s;
         }
-        .contact-item:hover, .user-item:hover, .chat-item:hover, .channel-item:hover { background: #f8f9fa; }
+        .contact-item:hover, .user-item:hover, .chat-item:hover { background: #f8f9fa; }
         .contact-item.active, .chat-item.active {
             background: #f3e5f5;
             border-left: 3px solid #9b59b6;
         }
-        .contact-avatar, .user-avatar-small, .chat-avatar, .channel-avatar {
+        .contact-avatar, .user-avatar-small, .chat-avatar {
             width: 44px;
             height: 44px;
             border-radius: 50%;
@@ -152,19 +149,17 @@
             background: #9b59b6;
         }
         .contact-avatar img, .user-avatar-small img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-        .contact-avatar i, .user-avatar-small i, .chat-avatar i, .channel-avatar i { font-size: 20px; }
         .contact-info, .user-info-small, .chat-info { flex: 1; }
         .contact-name, .chat-name { font-weight: 600; color: #2c3e50; }
         .contact-status, .chat-type { font-size: 11px; }
         .contact-status.online { color: #2ecc71; }
         .contact-status.offline { color: #999; }
-        .contact-phone, .contact-bio { font-size: 10px; color: #8dc63f; margin-top: 2px; }
         .contact-actions, .call-buttons {
             display: flex;
             gap: 8px;
             margin-left: auto;
         }
-        .call-btn, .delete-contact-btn, .invite-btn, .join-btn {
+        .call-btn, .delete-contact-btn {
             background: none;
             border: none;
             cursor: pointer;
@@ -174,9 +169,8 @@
             transition: background 0.2s;
             color: #666;
         }
-        .call-btn:hover, .delete-contact-btn:hover, .invite-btn:hover, .join-btn:hover { background: #f0f0f0; }
+        .call-btn:hover, .delete-contact-btn:hover { background: #f0f0f0; }
         .delete-contact-btn { color: #e74c3c; }
-        .invite-btn, .join-btn { color: #8dc63f; }
         .add-btn {
             background: #9b59b6;
             color: white;
@@ -195,10 +189,8 @@
             border-radius: 20px;
             cursor: pointer;
             font-weight: 600;
-            transition: transform 0.1s;
         }
         .create-chat-btn i { margin-right: 8px; }
-        .create-chat-btn:hover { transform: scale(1.02); }
         .chat-area {
             flex: 1;
             display: flex;
@@ -229,17 +221,6 @@
         .chat-header-info { flex: 1; }
         .chat-header-info h3 { color: #2c3e50; font-size: 18px; }
         .chat-header-info p { font-size: 12px; color: #2ecc71; }
-        .chat-header-info .phone, .chat-header-info .bio { font-size: 11px; color: #8dc63f; margin-top: 2px; }
-        .chat-actions { display: flex; gap: 10px; }
-        .chat-actions button {
-            background: #9b59b6;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-        }
-        .chat-actions button i { margin-right: 6px; }
         .messages-container {
             flex: 1;
             padding: 20px;
@@ -252,7 +233,7 @@
         .message { display: flex; }
         .message.out { justify-content: flex-end; }
         .message-bubble {
-            max-width: 65%;
+            max-width: 70%;
             padding: 10px 14px;
             border-radius: 18px;
         }
@@ -267,22 +248,57 @@
             color: white;
             border-bottom-right-radius: 4px;
         }
-        .message-sender {
-            font-size: 11px;
-            font-weight: bold;
-            margin-bottom: 4px;
-            opacity: 0.8;
-        }
-        .message-sender i { margin-right: 4px; font-size: 10px; }
         .message-text { word-wrap: break-word; font-size: 14px; }
         .message-time { font-size: 10px; margin-top: 5px; opacity: 0.7; text-align: right; }
-        .message-time i { margin-right: 4px; font-size: 9px; }
+        .voice-message {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .voice-play-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .voice-play-btn:hover { background: rgba(0,0,0,0.2); }
+        .voice-wave {
+            flex: 1;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .voice-wave span {
+            width: 3px;
+            background: currentColor;
+            border-radius: 2px;
+            animation: wave 0.5s infinite ease-in-out;
+        }
+        .voice-wave span:nth-child(1) { height: 12px; animation-delay: 0s; }
+        .voice-wave span:nth-child(2) { height: 20px; animation-delay: 0.1s; }
+        .voice-wave span:nth-child(3) { height: 28px; animation-delay: 0.2s; }
+        .voice-wave span:nth-child(4) { height: 20px; animation-delay: 0.3s; }
+        .voice-wave span:nth-child(5) { height: 12px; animation-delay: 0.4s; }
+        @keyframes wave {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.5); }
+        }
+        .voice-duration { font-size: 12px; opacity: 0.7; min-width: 40px; }
+        .voice-text { font-size: 12px; opacity: 0.8; margin-top: 4px; font-style: italic; }
         .input-area {
             padding: 15px 20px;
             background: white;
             border-top: 1px solid #eee;
             display: flex;
             gap: 12px;
+            align-items: center;
         }
         .input-area input {
             flex: 1;
@@ -292,8 +308,26 @@
             outline: none;
             font-size: 14px;
         }
-        .input-area input:focus { border-color: #9b59b6; }
-        .input-area button {
+        .voice-record-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .voice-record-btn.recording {
+            background: #c0392b;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .send-btn {
             padding: 12px 24px;
             background: linear-gradient(135deg, #9b59b6, #8e44ad);
             color: white;
@@ -302,7 +336,6 @@
             cursor: pointer;
             font-weight: 600;
         }
-        .input-area button i { margin-right: 6px; }
         .modal {
             position: fixed;
             top: 0;
@@ -321,37 +354,7 @@
             padding: 30px;
             width: 500px;
             max-width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
         }
-        .modal-content h3 { margin-bottom: 20px; color: #8dc63f; }
-        .modal-content h3 i { margin-right: 8px; }
-        .modal-content h4 { margin: 15px 0 10px; color: #9b59b6; }
-        .modal-content input, .modal-content select, .modal-content textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #e0e0e0;
-            border-radius: 20px;
-            outline: none;
-        }
-        .modal-content .checkbox-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 15px 0;
-        }
-        .modal-content .checkbox-row input { width: auto; margin: 0; }
-        .modal-content button {
-            padding: 10px 20px;
-            margin: 10px 5px;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-        }
-        .save-btn { background: #8dc63f; color: white; }
-        .cancel-btn { background: #e74c3c; color: white; }
-        .accept-btn { background: #9b59b6; color: white; }
         .empty-state { text-align: center; padding: 30px; color: #999; }
         .empty-state i { font-size: 48px; margin-bottom: 15px; display: block; color: #ccc; }
         .notification {
@@ -365,7 +368,6 @@
             z-index: 1000;
             animation: fadeOut 3s forwards;
         }
-        .notification i { margin-right: 8px; }
         @keyframes fadeOut {
             0% { opacity: 1; }
             70% { opacity: 1; }
@@ -377,10 +379,8 @@
             border-radius: 28px;
             padding: 40px;
             text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
         .login-screen h1 { color: #8dc63f; margin-bottom: 8px; font-size: 32px; }
-        .login-screen h1 i { margin-right: 10px; }
         .login-screen input, .login-screen select {
             width: 100%;
             padding: 12px;
@@ -402,18 +402,8 @@
             border-radius: 25px;
             cursor: pointer;
         }
-        .login-screen button i { margin-right: 8px; }
         .switch-mode { margin-top: 15px; color: #9b59b6; cursor: pointer; font-size: 14px; }
-        .privacy-link {
-            font-size: 12px;
-            color: #999;
-            margin-top: 15px;
-            cursor: pointer;
-        }
-        .privacy-link i { margin-right: 4px; }
-        .privacy-link span { color: #9b59b6; text-decoration: underline; }
         .error { color: #e74c3c; font-size: 12px; margin-top: 10px; }
-        .loading { text-align: center; padding: 20px; color: #999; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -430,53 +420,164 @@
             let currentUser = null;
             let currentContact = null;
             let currentChat = null;
-            let currentChatType = null;
             let autoUpdateInterval = null;
-            let lastMessagesString = '';
-            let lastMessagesMap = new Map(); // Храним последнюю строку сообщений для каждого чата
-            let privacyAccepted = localStorage.getItem('privacy_accepted') === 'true';
-            let activeTab = 'contacts';
+            let lastMessagesMap = new Map();
             let isMainScreenLoaded = false;
             let notificationsEnabled = false;
+            let mediaRecorder = null;
+            let audioChunks = [];
+            let isRecording = false;
+            let currentAudio = null;
             
-            // Запрашиваем разрешение на уведомления
+            // Speech Recognition для преобразования голоса в текст
+            let recognition = null;
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.lang = 'ru-RU';
+                recognition.interimResults = true;
+                recognition.maxAlternatives = 1;
+            }
+            
             async function requestNotificationPermission() {
-                if (!('Notification' in window)) {
-                    console.log('Браузер не поддерживает уведомления');
-                    return;
-                }
-                if (Notification.permission === 'granted') {
-                    notificationsEnabled = true;
-                } else if (Notification.permission !== 'denied') {
+                if (!('Notification' in window)) return;
+                if (Notification.permission === 'granted') notificationsEnabled = true;
+                else if (Notification.permission !== 'denied') {
                     const permission = await Notification.requestPermission();
                     notificationsEnabled = permission === 'granted';
-                    if (notificationsEnabled) {
-                        showNotification('🔔 Уведомления включены');
+                }
+            }
+            
+            function sendPushNotification(title, body) {
+                if (!notificationsEnabled || document.hasFocus()) return;
+                try {
+                    new Notification(title, { body: body, silent: false });
+                } catch(e) {}
+            }
+            
+            // Функция для отправки голосового сообщения
+            async function sendVoiceMessage(receiverId, audioBlob, text) {
+                const fileName = `voice_${currentUser.id}_${Date.now()}.webm`;
+                const { data, error } = await supabaseClient.storage
+                    .from('voice_messages')
+                    .upload(fileName, audioBlob);
+                
+                if (error) { console.error('Upload error:', error); return false; }
+                
+                const { data: urlData } = supabaseClient.storage
+                    .from('voice_messages')
+                    .getPublicUrl(fileName);
+                
+                const { error: insertError } = await supabaseClient
+                    .from('calls')
+                    .insert({
+                        caller_id: currentUser.id,
+                        receiver_id: receiverId,
+                        audio_url: urlData.publicUrl,
+                        text: text,
+                        duration: Math.round(audioBlob.size / 1000)
+                    });
+                
+                if (insertError) { console.error('Insert error:', insertError); return false; }
+                return true;
+            }
+            
+            // Функция для воспроизведения голосового сообщения
+            function playVoiceMessage(audioUrl) {
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio = null;
+                }
+                const audio = new Audio(audioUrl);
+                currentAudio = audio;
+                audio.play();
+                audio.onended = () => { currentAudio = null; };
+            }
+            
+            // Функция для преобразования голоса в текст
+            function startSpeechToText(callback) {
+                if (!recognition) {
+                    callback(null, 'Speech recognition not supported');
+                    return;
+                }
+                
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    callback(transcript, null);
+                };
+                
+                recognition.onerror = (event) => {
+                    callback(null, 'Ошибка распознавания');
+                };
+                
+                recognition.start();
+            }
+            
+            // Функция для записи голоса
+            async function startRecording() {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    // Преобразуем голос в текст
+                    startSpeechToText(async (text, error) => {
+                        const finalText = text || '🎤 Голосовое сообщение';
+                        if (currentContact) {
+                            await sendVoiceMessage(currentContact, audioBlob, finalText);
+                            showNotification('Голосовое сообщение отправлено');
+                        } else if (currentChat) {
+                            // Для групп пока просто текст
+                            await supabaseClient.from('messages').insert({
+                                from_user_id: currentUser.id,
+                                chat_id: currentChat,
+                                content: `🎤 ${finalText}`
+                            });
+                        }
+                        await loadMessages();
+                    });
+                };
+                
+                mediaRecorder.start();
+                isRecording = true;
+                updateRecordButton(true);
+            }
+            
+            function stopRecording() {
+                if (mediaRecorder && isRecording) {
+                    mediaRecorder.stop();
+                    isRecording = false;
+                    updateRecordButton(false);
+                }
+            }
+            
+            function updateRecordButton(recording) {
+                const btn = document.getElementById('voiceRecordBtn');
+                if (btn) {
+                    if (recording) {
+                        btn.classList.add('recording');
+                        btn.innerHTML = '<i class="fas fa-stop"></i>';
+                    } else {
+                        btn.classList.remove('recording');
+                        btn.innerHTML = '<i class="fas fa-microphone"></i>';
                     }
                 }
             }
             
-            // Отправка push-уведомления
-            function sendPushNotification(title, body, icon = null) {
-                if (!notificationsEnabled) return;
-                if (document.hasFocus()) return; // Не показываем уведомления если страница активна
-                
-                try {
-                    const notification = new Notification(title, {
-                        body: body,
-                        icon: icon || 'https://eiqtdlzsupmaaycwvjhp.supabase.co/storage/v1/object/public/avatars/timate-icon.png',
-                        silent: false
-                    });
-                    
-                    notification.onclick = function() {
-                        window.focus();
-                        notification.close();
-                    };
-                    
-                    setTimeout(() => notification.close(), 5000);
-                } catch (e) {
-                    console.error('Ошибка уведомления:', e);
-                }
+            async function loadVoiceMessages(contactId) {
+                const { data: calls } = await supabaseClient
+                    .from('calls')
+                    .select('*')
+                    .or(`and(caller_id.eq.${currentUser.id},receiver_id.eq.${contactId}),and(caller_id.eq.${contactId},receiver_id.eq.${currentUser.id})`)
+                    .order('created_at');
+                return calls || [];
             }
             
             const savedUser = localStorage.getItem('timate_user');
@@ -502,42 +603,6 @@
                 setTimeout(() => notif.remove(), 3000);
             }
             
-            function showPrivacyPolicy() {
-                const modal = document.createElement('div');
-                modal.className = 'modal';
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        <h3><i class="fas fa-shield-alt"></i> Политика конфиденциальности Timate</h3>
-                        <p><strong>Дата вступления в силу:</strong> 28 марта 2026 г.</p>
-                        <h4>1. Какие данные мы собираем</h4>
-                        <p>• Имя пользователя и отображаемое имя<br>• Номер телефона (для входа)<br>• Пароль (хранится в зашифрованном виде)<br>• Сообщения и история чатов</p>
-                        <h4>2. Как мы используем данные</h4>
-                        <p>• Для обеспечения работы мессенджера<br>• Для идентификации пользователей<br>• Для доставки сообщений</p>
-                        <h4>3. Передача данных третьим лицам</h4>
-                        <p><i class="fas fa-times-circle" style="color:#e74c3c;"></i> Мы НЕ передаём ваши данные третьим лицам.<br><i class="fas fa-check-circle" style="color:#2ecc71;"></i> Все данные хранятся в Supabase.</p>
-                        <h4>4. Контакты</h4>
-                        <p>По вопросам: <a href="https://t.me/TimateBot" target="_blank">@TimateBot</a></p>
-                        <hr>
-                        <div class="checkbox-row">
-                            <input type="checkbox" id="acceptPrivacy" ${privacyAccepted ? 'checked' : ''}>
-                            <label><i class="fas fa-check-circle"></i> Я принимаю условия</label>
-                        </div>
-                        <button class="accept-btn" onclick="window.acceptPrivacy()"><i class="fas fa-check"></i> Принять</button>
-                        <button class="cancel-btn" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i> Закрыть</button>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-            }
-            
-            window.acceptPrivacy = function() {
-                const checkbox = document.getElementById('acceptPrivacy');
-                if (!checkbox.checked) { alert('Примите условия'); return; }
-                privacyAccepted = true;
-                localStorage.setItem('privacy_accepted', 'true');
-                document.querySelector('.modal')?.remove();
-                showNotification('Условия приняты');
-            };
-            
             async function showAuth() {
                 document.getElementById('app').innerHTML = `
                     <div class="login-screen">
@@ -554,14 +619,12 @@
                         <input type="password" id="authPassword" placeholder="Пароль">
                         <button onclick="window.login()"><i class="fas fa-sign-in-alt"></i> Войти</button>
                         <div class="switch-mode" onclick="window.showRegister()"><i class="fas fa-user-plus"></i> Нет аккаунта? Зарегистрироваться</div>
-                        <div class="privacy-link" onclick="showPrivacyPolicy()"><i class="fas fa-file-contract"></i> <span>Политика конфиденциальности</span></div>
                         <div id="authError" class="error"></div>
                     </div>
                 `;
             }
             
             window.login = async function() {
-                if (!privacyAccepted) { showPrivacyPolicy(); return; }
                 const phone = document.getElementById('authPhone').value;
                 const password = document.getElementById('authPassword').value;
                 const countryCode = document.getElementById('authCountryCode').value;
@@ -579,14 +642,12 @@
             };
             
             window.showRegister = async function() {
-                if (!privacyAccepted) { showPrivacyPolicy(); return; }
                 document.getElementById('app').innerHTML = `
                     <div class="login-screen">
                         <h1><i class="fas fa-comment"></i> Timate</h1>
                         <p>регистрация</p>
                         <input type="text" id="regUsername" placeholder="Имя пользователя">
                         <input type="text" id="regDisplayName" placeholder="Отображаемое имя">
-                        <textarea id="regBio" rows="2" placeholder="О себе"></textarea>
                         <div class="phone-row">
                             <select id="regCountryCode">
                                 <option value="+7">🇷🇺 Россия (+7)</option>
@@ -599,7 +660,6 @@
                         <input type="password" id="regConfirmPassword" placeholder="Повторите пароль">
                         <button onclick="window.register()"><i class="fas fa-user-check"></i> Зарегистрироваться</button>
                         <div class="switch-mode" onclick="showAuth()"><i class="fas fa-sign-in-alt"></i> Уже есть аккаунт? Войти</div>
-                        <div class="privacy-link" onclick="showPrivacyPolicy()"><i class="fas fa-file-contract"></i> <span>Политика конфиденциальности</span></div>
                         <div id="regError" class="error"></div>
                     </div>
                 `;
@@ -608,7 +668,6 @@
             window.register = async function() {
                 const username = document.getElementById('regUsername').value;
                 const displayName = document.getElementById('regDisplayName').value;
-                const bio = document.getElementById('regBio').value;
                 const phone = document.getElementById('regPhone').value;
                 const password = document.getElementById('regPassword').value;
                 const confirm = document.getElementById('regConfirmPassword').value;
@@ -623,7 +682,7 @@
                 const { data: existing } = await supabaseClient.from('users').select('*').eq('phone', fullPhone).single();
                 if (existing) { document.getElementById('regError').textContent = '❌ Номер уже зарегистрирован'; return; }
                 const { data: newUser, error } = await supabaseClient.from('users').insert({
-                    username, display_name: displayName, password, phone: fullPhone, bio,
+                    username, display_name: displayName, password, phone: fullPhone,
                     avatar_color: '#9b59b6', status: 'online', hide_phone: false, invisible_mode: false, avatar_url: null
                 }).select().single();
                 if (error) { document.getElementById('regError').textContent = '❌ Ошибка'; return; }
@@ -632,87 +691,41 @@
                 await loadMainScreen();
             };
             
-            async function uploadAvatar(file) {
-                if (!file) return;
-                const fileName = `${currentUser.id}_${Date.now()}.png`;
-                const { data, error } = await supabaseClient.storage.from('avatars').upload(fileName, file);
-                if (error) { console.error('Upload error:', error); return null; }
-                const { data: urlData } = supabaseClient.storage.from('avatars').getPublicUrl(fileName);
-                return urlData.publicUrl;
-            }
-            
             async function loadMainScreen() {
                 if (isMainScreenLoaded) return;
                 isMainScreenLoaded = true;
-                
                 if (autoUpdateInterval) clearInterval(autoUpdateInterval);
-                
-                const avatarUrl = currentUser.avatar_url || '';
-                const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="avatar">` : `<i class="fas fa-user"></i>`;
                 
                 document.getElementById('app').innerHTML = `
                     <div class="timate-container">
                         <div class="sidebar">
                             <div class="sidebar-header"><h2><i class="fas fa-comment"></i> Timate</h2><p><i class="fas fa-leaf"></i> свободное общение</p></div>
                             <div class="current-user">
-                                <div class="user-avatar" onclick="document.getElementById('avatarInput').click()" style="cursor:pointer;">${avatarHtml}</div>
-                                <input type="file" id="avatarInput" style="display:none;" accept="image/*" onchange="uploadNewAvatar(this)">
+                                <div class="user-avatar"><i class="fas fa-user"></i></div>
                                 <div class="user-info">
                                     <div class="user-name">${escapeHtml(currentUser.display_name || currentUser.username)}</div>
                                     <div class="user-status"><i class="fas fa-circle"></i> онлайн</div>
-                                    ${!currentUser.hide_phone ? `<div class="user-phone"><i class="fas fa-phone"></i> ${escapeHtml(currentUser.phone || '')}</div>` : ''}
-                                    ${currentUser.bio ? `<div class="user-bio"><i class="fas fa-quote-left"></i> ${escapeHtml(currentUser.bio)}</div>` : ''}
                                 </div>
                                 <button class="settings-btn" onclick="openSettings()"><i class="fas fa-cog"></i></button>
                                 <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
                             </div>
-                            <button class="create-chat-btn" onclick="showCreateChatModal()"><i class="fas fa-plus-circle"></i> Создать группу/канал</button>
                             <div class="search-box">
                                 <i class="fas fa-search"></i>
-                                <input type="text" id="searchInput" placeholder="Поиск..." oninput="searchAll()">
+                                <input type="text" id="searchInput" placeholder="Поиск...">
                             </div>
                             <div class="tabs">
-                                <div class="tab ${activeTab === 'contacts' ? 'active' : ''}" onclick="switchTab('contacts')"><i class="fas fa-users"></i> Контакты</div>
-                                <div class="tab ${activeTab === 'users' ? 'active' : ''}" onclick="switchTab('users')"><i class="fas fa-globe"></i> Все пользователи</div>
-                                <div class="tab ${activeTab === 'chats' ? 'active' : ''}" onclick="switchTab('chats')"><i class="fas fa-layer-group"></i> Мои чаты</div>
-                                <div class="tab ${activeTab === 'public' ? 'active' : ''}" onclick="switchTab('public')"><i class="fas fa-globe"></i> Публичные каналы</div>
+                                <div class="tab active" onclick="switchTab('contacts')"><i class="fas fa-users"></i> Контакты</div>
+                                <div class="tab" onclick="switchTab('users')"><i class="fas fa-globe"></i> Все пользователи</div>
                             </div>
                             <div id="contactsList" class="contacts-list"></div>
                             <div id="usersList" class="users-list" style="display: none;"></div>
-                            <div id="chatsList" class="chats-list" style="display: none;"></div>
-                            <div id="publicChannelsList" class="public-channels-list" style="display: none;"></div>
                         </div>
-                        <div class="chat-area" id="chatArea"><div class="empty-state"><i class="fas fa-comment"></i>Выберите чат для общения</div></div>
+                        <div class="chat-area" id="chatArea"><div class="empty-state"><i class="fas fa-comment"></i>Выберите контакт для общения</div></div>
                     </div>
                 `;
-                
-                await loadContacts(); 
-                await loadAllUsers(); 
-                await loadMyChats(); 
-                await loadPublicChannels();
-                
-                document.getElementById('contactsList').style.display = activeTab === 'contacts' ? 'block' : 'none';
-                document.getElementById('usersList').style.display = activeTab === 'users' ? 'block' : 'none';
-                document.getElementById('chatsList').style.display = activeTab === 'chats' ? 'block' : 'none';
-                document.getElementById('publicChannelsList').style.display = activeTab === 'public' ? 'block' : 'none';
-                
+                await loadContacts(); await loadAllUsers();
                 startAutoUpdate();
             }
-            
-            window.uploadNewAvatar = async function(input) {
-                if (input.files && input.files[0]) {
-                    const url = await uploadAvatar(input.files[0]);
-                    if (url) {
-                        const { error } = await supabaseClient.from('users').update({ avatar_url: url }).eq('id', currentUser.id);
-                        if (!error) {
-                            currentUser.avatar_url = url;
-                            saveSession(currentUser);
-                            showNotification('Аватар обновлён');
-                            await loadMainScreen();
-                        }
-                    }
-                }
-            };
             
             async function loadContacts() {
                 const { data: contacts } = await supabaseClient.from('contacts').select(`contact_id, nickname, users:contact_id(*)`).eq('user_id', currentUser.id);
@@ -721,19 +734,15 @@
                 if (!contacts?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-address-book"></i>Нет контактов</div>'; return; }
                 container.innerHTML = contacts.map(c => {
                     const u = c.users;
-                    const avatarHtml = u.avatar_url ? `<img src="${u.avatar_url}" alt="avatar">` : `<i class="fas fa-user"></i>`;
                     return `<div class="contact-item" onclick="selectContact('${u.id}')" data-contact-id="${u.id}">
-                        <div class="contact-avatar" style="background: ${u.avatar_color || '#9b59b6'}">${avatarHtml}</div>
+                        <div class="contact-avatar" style="background: ${u.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
                         <div class="contact-info">
                             <div class="contact-name">${escapeHtml(c.nickname || u.display_name || u.username)}</div>
                             <div class="contact-status ${u.status === 'online' ? 'online' : 'offline'}"><i class="fas fa-circle"></i> ${u.status === 'online' ? 'онлайн' : 'офлайн'}</div>
-                            ${!u.hide_phone && u.phone ? `<div class="contact-phone"><i class="fas fa-phone"></i> ${escapeHtml(u.phone)}</div>` : ''}
-                            ${u.bio ? `<div class="contact-bio">${escapeHtml(u.bio.substring(0, 40))}</div>` : ''}
                         </div>
                         <div class="contact-actions">
                             <button class="delete-contact-btn" onclick="event.stopPropagation(); deleteContact('${u.id}')" title="Удалить"><i class="fas fa-trash-alt"></i></button>
-                            <button class="call-btn" onclick="event.stopPropagation(); startCall('${u.id}', 'audio')"><i class="fas fa-phone"></i></button>
-                            <button class="call-btn" onclick="event.stopPropagation(); startCall('${u.id}', 'video')"><i class="fas fa-video"></i></button>
+                            <button class="call-btn" onclick="event.stopPropagation(); startVoiceCall('${u.id}')" title="Голосовое сообщение"><i class="fas fa-microphone"></i></button>
                         </div>
                     </div>`;
                 }).join('');
@@ -748,529 +757,191 @@
             };
             
             async function loadAllUsers() {
-                let query = supabaseClient.from('users').select('*').neq('id', currentUser.id);
-                if (currentUser.invisible_mode) query = query.eq('invisible_mode', false);
-                const { data: users } = await query;
+                const { data: users } = await supabaseClient.from('users').select('*').neq('id', currentUser.id);
                 const container = document.getElementById('usersList');
                 if (!container) return;
                 if (!users?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-globe"></i>Нет пользователей</div>'; return; }
                 const { data: contacts } = await supabaseClient.from('contacts').select('contact_id').eq('user_id', currentUser.id);
                 const contactIds = new Set(contacts?.map(c => c.contact_id) || []);
-                container.innerHTML = users.map(u => {
-                    const avatarHtml = u.avatar_url ? `<img src="${u.avatar_url}" alt="avatar">` : `<i class="fas fa-user"></i>`;
-                    return `<div class="user-item">
-                        <div class="user-avatar-small" style="background: ${u.avatar_color || '#9b59b6'}">${avatarHtml}</div>
+                container.innerHTML = users.map(u => `
+                    <div class="user-item">
+                        <div class="user-avatar-small" style="background: ${u.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
                         <div class="user-info-small">
                             <div class="contact-name">${escapeHtml(u.display_name || u.username)}</div>
-                            ${!u.hide_phone && u.phone ? `<div><i class="fas fa-phone"></i> ${escapeHtml(u.phone)}</div>` : ''}
-                            ${u.bio ? `<div style="font-size:10px;color:#666;"><i class="fas fa-quote-left"></i> ${escapeHtml(u.bio.substring(0, 40))}</div>` : ''}
                         </div>
-                        ${!contactIds.has(u.id) ? `<button class="add-btn" onclick="showAddContactModal('${u.id}', '${escapeHtml(u.display_name || u.username)}')"><i class="fas fa-user-plus"></i> Добавить</button>` : '<span style="color:#8dc63f;"><i class="fas fa-check"></i> в контактах</span>'}
-                    </div>`;
-                }).join('');
-            }
-            
-            window.showAddContactModal = function(userId, userName) {
-                const modal = document.createElement('div');
-                modal.className = 'modal';
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        <h3><i class="fas fa-user-plus"></i> Добавить контакт</h3>
-                        <p>Вы хотите добавить <strong>${escapeHtml(userName)}</strong> в свой список контактов?</p>
-                        <div class="checkbox-row">
-                            <input type="text" id="contactNickname" placeholder="Прозвище (необязательно)">
-                        </div>
-                        <button class="save-btn" onclick="window.confirmAddContact('${userId}', document.getElementById('contactNickname').value)"><i class="fas fa-check"></i> Добавить</button>
-                        <button class="cancel-btn" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i> Отмена</button>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-            };
-            
-            window.confirmAddContact = async function(userId, nickname) {
-                await supabaseClient.from('contacts').insert({ user_id: currentUser.id, contact_id: userId, nickname: nickname || null });
-                showNotification('Контакт добавлен');
-                document.querySelector('.modal')?.remove();
-                await loadContacts(); 
-                await loadAllUsers();
-            };
-            
-            async function loadMyChats() {
-                const { data: memberships } = await supabaseClient.from('chat_members').select('chat_id, chats(*)').eq('user_id', currentUser.id);
-                const container = document.getElementById('chatsList');
-                if (!container) return;
-                if (!memberships?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-layer-group"></i>Нет групп/каналов</div>'; return; }
-                container.innerHTML = memberships.map(m => {
-                    const chat = m.chats;
-                    const typeIcon = chat.type === 'group' ? '<i class="fas fa-users"></i>' : '<i class="fas fa-broadcast-tower"></i>';
-                    return `<div class="chat-item" onclick="selectChat('${chat.id}', '${chat.type}')" data-chat-id="${chat.id}">
-                        <div class="chat-avatar" style="background: ${chat.avatar_color || '#8dc63f'}">${typeIcon}</div>
-                        <div class="chat-info">
-                            <div class="chat-name">${escapeHtml(chat.name)}</div>
-                            <div class="chat-type"><i class="fas ${chat.type === 'group' ? 'fa-users' : 'fa-broadcast-tower'}"></i> ${chat.type === 'group' ? 'Группа' : (chat.is_private ? 'Приватный канал' : 'Публичный канал')}</div>
-                        </div>
-                    </div>`;
-                }).join('');
-            }
-            
-            async function loadPublicChannels() {
-                const { data: channels } = await supabaseClient.from('chats').select('*').eq('type', 'channel').eq('is_private', false);
-                const container = document.getElementById('publicChannelsList');
-                if (!container) return;
-                if (!channels?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-globe"></i>Нет публичных каналов</div>'; return; }
-                const { data: memberships } = await supabaseClient.from('chat_members').select('chat_id').eq('user_id', currentUser.id);
-                const myChatIds = new Set(memberships?.map(m => m.chat_id) || []);
-                container.innerHTML = channels.map(ch => `
-                    <div class="channel-item" onclick="joinPublicChannel('${ch.id}')">
-                        <div class="channel-avatar" style="background: ${ch.avatar_color || '#8dc63f'}"><i class="fas fa-broadcast-tower"></i></div>
-                        <div class="chat-info">
-                            <div class="chat-name">${escapeHtml(ch.name)}</div>
-                            <div class="chat-type"><i class="fas fa-globe"></i> Публичный канал</div>
-                            ${ch.description ? `<div style="font-size:10px;color:#666;">${escapeHtml(ch.description.substring(0, 50))}</div>` : ''}
-                        </div>
-                        ${!myChatIds.has(ch.id) ? `<button class="join-btn" onclick="event.stopPropagation(); joinPublicChannel('${ch.id}')" title="Подписаться"><i class="fas fa-plus-circle"></i></button>` : '<span style="color:#8dc63f;"><i class="fas fa-check"></i> подписан</span>'}
+                        ${!contactIds.has(u.id) ? `<button class="add-btn" onclick="addContact('${u.id}')"><i class="fas fa-user-plus"></i> Добавить</button>` : '<span style="color:#8dc63f;"><i class="fas fa-check"></i> в контактах</span>'}
                     </div>
                 `).join('');
             }
             
-            window.joinPublicChannel = async function(chatId) {
-                const { error } = await supabaseClient.from('chat_members').insert({ chat_id: chatId, user_id: currentUser.id, role: 'member' });
-                if (!error) {
-                    showNotification('Вы подписались на канал');
-                    await loadMyChats();
-                    if (activeTab === 'public') loadPublicChannels();
-                } else {
-                    showNotification('Ошибка подписки');
-                }
+            window.addContact = async function(contactId) {
+                await supabaseClient.from('contacts').insert({ user_id: currentUser.id, contact_id: contactId });
+                showNotification('Контакт добавлен');
+                await loadContacts(); await loadAllUsers();
+            };
+            
+            window.startVoiceCall = function(contactId) {
+                selectContact(contactId);
+                setTimeout(() => {
+                    const recordBtn = document.getElementById('voiceRecordBtn');
+                    if (recordBtn) recordBtn.click();
+                }, 500);
             };
             
             window.selectContact = async function(contactId) {
-                currentContact = contactId; 
+                currentContact = contactId;
                 currentChat = null;
                 document.querySelectorAll('.contact-item').forEach(el => el.classList.remove('active'));
                 const activeEl = document.querySelector(`.contact-item[data-contact-id="${contactId}"]`);
                 if (activeEl) activeEl.classList.add('active');
-                await loadPrivateMessages(contactId);
-                await renderPrivateChat(contactId);
-                const messagesKey = `private_${contactId}`;
-                lastMessagesMap.set(messagesKey, JSON.stringify(window.currentMessages));
+                await loadMessages(contactId);
+                await renderChat(contactId);
+                lastMessagesMap.set(`private_${contactId}`, JSON.stringify(window.currentMessages));
             };
             
-            window.selectChat = async function(chatId, type) {
-                currentChat = chatId; 
-                currentContact = null; 
-                currentChatType = type;
-                document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
-                const activeEl = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
-                if (activeEl) activeEl.classList.add('active');
-                await loadGroupMessages(chatId);
-                await renderGroupChat(chatId);
-                const messagesKey = `group_${chatId}`;
-                lastMessagesMap.set(messagesKey, JSON.stringify(window.currentMessages));
-            };
-            
-            async function loadPrivateMessages(contactId) {
-                const { data: messages } = await supabaseClient.from('messages').select('*').or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${contactId}),and(from_user_id.eq.${contactId},to_user_id.eq.${currentUser.id})`).order('created_at');
-                window.currentMessages = messages || [];
-                await supabaseClient.from('messages').update({ is_read: true }).eq('from_user_id', contactId).eq('to_user_id', currentUser.id).eq('is_read', false);
+            async function loadMessages(contactId) {
+                const [messages, voiceMessages] = await Promise.all([
+                    supabaseClient.from('messages').select('*').or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${contactId}),and(from_user_id.eq.${contactId},to_user_id.eq.${currentUser.id})`).order('created_at'),
+                    supabaseClient.from('calls').select('*').or(`and(caller_id.eq.${currentUser.id},receiver_id.eq.${contactId}),and(caller_id.eq.${contactId},receiver_id.eq.${currentUser.id})`).order('created_at')
+                ]);
+                
+                const allMessages = [
+                    ...(messages.data || []).map(m => ({ ...m, type: 'text' })),
+                    ...(voiceMessages.data || []).map(v => ({ ...v, type: 'voice', from_user_id: v.caller_id, to_user_id: v.receiver_id, content: v.text, audio_url: v.audio_url }))
+                ];
+                allMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                window.currentMessages = allMessages;
             }
             
-            async function loadGroupMessages(chatId) {
-                const { data: messages } = await supabaseClient.from('messages').select('*, users:from_user_id(username, display_name)').eq('chat_id', chatId).order('created_at');
-                window.currentMessages = messages || [];
-            }
-            
-            async function renderPrivateChat(contactId) {
+            async function renderChat(contactId) {
                 const { data: contact } = await supabaseClient.from('users').select('*').eq('id', contactId).single();
                 const chatArea = document.getElementById('chatArea');
                 const messages = window.currentMessages || [];
-                const avatarHtml = contact?.avatar_url ? `<img src="${contact.avatar_url}" alt="avatar">` : `<i class="fas fa-user"></i>`;
-                chatArea.innerHTML = `
-                    <div class="chat-header">
-                        <div class="chat-header-avatar" style="background: ${contact?.avatar_color || '#9b59b6'}">${avatarHtml}</div>
-                        <div class="chat-header-info">
-                            <h3>${escapeHtml(contact?.display_name || contact?.username)}</h3>
-                            <p><i class="fas fa-circle"></i> ${contact?.status === 'online' ? 'онлайн' : 'офлайн'}</p>
-                            ${!contact?.hide_phone && contact?.phone ? `<div class="phone"><i class="fas fa-phone"></i> ${escapeHtml(contact.phone)}</div>` : ''}
-                            ${contact?.bio ? `<div class="bio"><i class="fas fa-quote-left"></i> ${escapeHtml(contact.bio)}</div>` : ''}
-                        </div>
-                        <div class="chat-actions">
-                            <button onclick="startCall('${contactId}', 'audio')"><i class="fas fa-phone"></i> Аудио</button>
-                            <button onclick="startCall('${contactId}', 'video')"><i class="fas fa-video"></i> Видео</button>
-                        </div>
-                    </div>
-                    <div class="messages-container" id="messagesContainer">
-                        ${messages.length === 0 ? '<div class="empty-state"><i class="fas fa-comment"></i>Нет сообщений</div>' : messages.map(msg => `
-                            <div class="message ${msg.from_user_id === currentUser.id ? 'out' : 'in'}">
-                                <div class="message-bubble">
-                                    <div class="message-text">${escapeHtml(msg.content)}</div>
-                                    <div class="message-time"><i class="far fa-clock"></i> ${new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="input-area">
-                        <input type="text" id="messageInput" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendPrivateMessage()">
-                        <button onclick="sendPrivateMessage()"><i class="fas fa-paper-plane"></i> Отправить</button>
-                    </div>
-                `;
-                const container = document.getElementById('messagesContainer');
-                if (container) container.scrollTop = container.scrollHeight;
-            }
-            
-            async function renderGroupChat(chatId) {
-                const { data: chat } = await supabaseClient.from('chats').select('*').eq('id', chatId).single();
-                const chatArea = document.getElementById('chatArea');
-                const messages = window.currentMessages || [];
-                const typeIcon = chat.type === 'group' ? '<i class="fas fa-users"></i>' : '<i class="fas fa-broadcast-tower"></i>';
                 
                 chatArea.innerHTML = `
                     <div class="chat-header">
-                        <div class="chat-header-avatar" style="background: ${chat.avatar_color || '#8dc63f'}">${typeIcon}</div>
+                        <div class="chat-header-avatar" style="background: ${contact?.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
                         <div class="chat-header-info">
-                            <h3>${escapeHtml(chat.name)}</h3>
-                            <p><i class="fas fa-circle"></i> ${chat.type === 'group' ? 'Группа' : (chat.is_private ? 'Приватный канал' : 'Публичный канал')}</p>
-                            ${chat.description ? `<div class="bio"><i class="fas fa-info-circle"></i> ${escapeHtml(chat.description)}</div>` : ''}
-                        </div>
-                        <div class="chat-actions">
-                            ${chat.type === 'channel' && chat.is_private ? `<button onclick="inviteToChannelModal('${chat.id}')"><i class="fas fa-user-plus"></i> Пригласить</button>` : ''}
+                            <h3>${escapeHtml(contact?.display_name || contact?.username)}</h3>
+                            <p><i class="fas fa-circle"></i> ${contact?.status === 'online' ? 'онлайн' : 'офлайн'}</p>
                         </div>
                     </div>
                     <div class="messages-container" id="messagesContainer">
-                        ${messages.length === 0 ? '<div class="empty-state"><i class="fas fa-comment"></i>Нет сообщений</div>' : messages.map(msg => `
-                            <div class="message ${msg.from_user_id === currentUser.id ? 'out' : 'in'}">
-                                <div class="message-bubble">
-                                    ${msg.from_user_id !== currentUser.id ? `<div class="message-sender"><i class="fas fa-user"></i> ${escapeHtml(msg.users?.display_name || msg.users?.username)}</div>` : ''}
-                                    <div class="message-text">${escapeHtml(msg.content)}</div>
-                                    <div class="message-time"><i class="far fa-clock"></i> ${new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
-                                </div>
-                            </div>
-                        `).join('')}
+                        ${messages.length === 0 ? '<div class="empty-state"><i class="fas fa-comment"></i>Нет сообщений</div>' : messages.map(msg => {
+                            if (msg.type === 'voice') {
+                                return `
+                                    <div class="message ${msg.from_user_id === currentUser.id ? 'out' : 'in'}">
+                                        <div class="message-bubble">
+                                            <div class="voice-message" onclick="playVoiceMessage('${msg.audio_url}')">
+                                                <div class="voice-play-btn"><i class="fas fa-play"></i></div>
+                                                <div class="voice-wave">
+                                                    <span></span><span></span><span></span><span></span><span></span>
+                                                </div>
+                                                <div class="voice-duration">${msg.duration || 0} сек</div>
+                                            </div>
+                                            ${msg.text ? `<div class="voice-text"><i class="fas fa-language"></i> ${escapeHtml(msg.text)}</div>` : ''}
+                                            <div class="message-time"><i class="far fa-clock"></i> ${new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            } else {
+                                return `
+                                    <div class="message ${msg.from_user_id === currentUser.id ? 'out' : 'in'}">
+                                        <div class="message-bubble">
+                                            <div class="message-text">${escapeHtml(msg.content)}</div>
+                                            <div class="message-time"><i class="far fa-clock"></i> ${new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        }).join('')}
                     </div>
                     <div class="input-area">
-                        <input type="text" id="messageInput" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendGroupMessage()">
-                        <button onclick="sendGroupMessage()"><i class="fas fa-paper-plane"></i> Отправить</button>
+                        <input type="text" id="messageInput" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendTextMessage()">
+                        <button class="voice-record-btn" id="voiceRecordBtn" onclick="toggleVoiceRecording()"><i class="fas fa-microphone"></i></button>
+                        <button class="send-btn" onclick="sendTextMessage()"><i class="fas fa-paper-plane"></i></button>
                     </div>
                 `;
+                
                 const container = document.getElementById('messagesContainer');
                 if (container) container.scrollTop = container.scrollHeight;
             }
             
-            window.sendPrivateMessage = async function() {
+            window.toggleVoiceRecording = function() {
+                if (!isRecording) {
+                    startRecording();
+                } else {
+                    stopRecording();
+                }
+            };
+            
+            window.sendTextMessage = async function() {
                 const input = document.getElementById('messageInput');
                 const content = input.value.trim();
                 if (!content || !currentContact) return;
                 await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, to_user_id: currentContact, content });
                 input.value = '';
-                await loadPrivateMessages(currentContact);
-                await renderPrivateChat(currentContact);
-                const messagesKey = `private_${currentContact}`;
-                lastMessagesMap.set(messagesKey, JSON.stringify(window.currentMessages));
+                await loadMessages(currentContact);
+                await renderChat(currentContact);
+                lastMessagesMap.set(`private_${currentContact}`, JSON.stringify(window.currentMessages));
             };
             
-            window.sendGroupMessage = async function() {
-                const input = document.getElementById('messageInput');
-                const content = input.value.trim();
-                if (!content || !currentChat) return;
-                
-                await supabaseClient.from('messages').insert({ 
-                    from_user_id: currentUser.id, 
-                    chat_id: currentChat, 
-                    content: content 
-                });
-                
-                input.value = '';
-                await loadGroupMessages(currentChat);
-                await renderGroupChat(currentChat);
-                const messagesKey = `group_${currentChat}`;
-                lastMessagesMap.set(messagesKey, JSON.stringify(window.currentMessages));
-            };
-            
-            window.inviteToChannelModal = function(chatId) {
-                const username = prompt('Введите имя пользователя для приглашения:');
-                if (username) inviteToChannel(chatId, username);
-            };
-            
-            window.inviteToChannel = async function(chatId, userName) {
-                const { data: users } = await supabaseClient.from('users').select('id, username, display_name').ilike('username', `%${userName}%`).limit(10);
-                if (!users?.length) { alert('Пользователь не найден'); return; }
-                let targetUser = users[0];
-                if (users.length > 1) {
-                    const list = users.map(u => `${u.username} - ${u.display_name}`).join('\n');
-                    const selected = prompt(`Найдено несколько пользователей:\n${list}\nВведите точное имя:`);
-                    targetUser = users.find(u => u.username === selected || u.display_name === selected);
-                    if (!targetUser) { alert('Пользователь не выбран'); return; }
+            window.playVoiceMessage = function(audioUrl) {
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio = null;
                 }
-                if (confirm(`Пригласить ${targetUser.display_name || targetUser.username} в канал?`)) {
-                    const { error } = await supabaseClient.from('chat_members').insert({ chat_id: chatId, user_id: targetUser.id, role: 'member' });
-                    if (!error) showNotification('Приглашение отправлено');
-                    else showNotification('Ошибка: возможно, пользователь уже в канале');
-                }
-            };
-            
-            window.showCreateChatModal = function() {
-                const modal = document.createElement('div');
-                modal.className = 'modal';
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        <h3><i class="fas fa-plus-circle"></i> Создать чат</h3>
-                        <select id="chatType">
-                            <option value="group"><i class="fas fa-users"></i> Группа (приватная)</option>
-                            <option value="channel"><i class="fas fa-broadcast-tower"></i> Канал</option>
-                        </select>
-                        <div id="privacyOption" style="display:none;">
-                            <div class="checkbox-row"><input type="checkbox" id="isPrivate"><label><i class="fas fa-lock"></i> Приватный канал</label></div>
-                        </div>
-                        <input type="text" id="chatName" placeholder="Название">
-                        <textarea id="chatDescription" rows="2" placeholder="Описание"></textarea>
-                        <button class="save-btn" onclick="createChat()"><i class="fas fa-save"></i> Создать</button>
-                        <button class="cancel-btn" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i> Отмена</button>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-                document.getElementById('chatType').onchange = function() {
-                    document.getElementById('privacyOption').style.display = this.value === 'channel' ? 'block' : 'none';
-                };
-            };
-            
-            window.createChat = async function() {
-                const type = document.getElementById('chatType').value;
-                const name = document.getElementById('chatName').value.trim();
-                const description = document.getElementById('chatDescription').value.trim();
-                const isPrivate = type === 'channel' ? document.getElementById('isPrivate')?.checked : true;
-                if (!name) { alert('Введите название'); return; }
-                const { data: chat, error } = await supabaseClient.from('chats').insert({
-                    name, type, is_private: isPrivate, description, avatar_color: '#8dc63f', created_by: currentUser.id
-                }).select().single();
-                if (error) { alert('Ошибка'); return; }
-                document.querySelector('.modal')?.remove();
-                showNotification(`${type === 'group' ? 'Группа' : 'Канал'} "${name}" создан`);
-                await loadMyChats();
-                if (activeTab === 'chats') switchTab('chats');
+                const audio = new Audio(audioUrl);
+                currentAudio = audio;
+                audio.play();
+                audio.onended = () => { currentAudio = null; };
             };
             
             function startAutoUpdate() {
                 if (autoUpdateInterval) clearInterval(autoUpdateInterval);
                 autoUpdateInterval = setInterval(async () => {
                     if (currentContact) {
-                        const { data: messages } = await supabaseClient.from('messages').select('*').or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${currentContact}),and(from_user_id.eq.${currentContact},to_user_id.eq.${currentUser.id})`).order('created_at');
-                        const currentString = JSON.stringify(messages);
-                        const messagesKey = `private_${currentContact}`;
-                        const lastString = lastMessagesMap.get(messagesKey) || '';
-                        
+                        await loadMessages(currentContact);
+                        const currentString = JSON.stringify(window.currentMessages);
+                        const lastString = lastMessagesMap.get(`private_${currentContact}`) || '';
                         if (currentString !== lastString) {
-                            // Нашли новое сообщение!
-                            lastMessagesMap.set(messagesKey, currentString);
+                            lastMessagesMap.set(`private_${currentContact}`, currentString);
+                            await renderChat(currentContact);
                             
-                            // Находим новое сообщение (последнее в списке)
-                            const newMessages = messages || [];
+                            const newMessages = window.currentMessages || [];
                             const oldMessages = lastString ? JSON.parse(lastString) : [];
-                            
                             if (newMessages.length > oldMessages.length) {
-                                const lastMessage = newMessages[newMessages.length - 1];
-                                // Проверяем, что сообщение не от текущего пользователя
-                                if (lastMessage && lastMessage.from_user_id !== currentUser.id) {
-                                    // Получаем имя отправителя
-                                    const { data: sender } = await supabaseClient.from('users').select('display_name, username').eq('id', lastMessage.from_user_id).single();
-                                    const senderName = sender?.display_name || sender?.username || 'Пользователь';
-                                    sendPushNotification(`💬 Новое сообщение от ${senderName}`, lastMessage.content.substring(0, 100));
+                                const lastMsg = newMessages[newMessages.length - 1];
+                                if (lastMsg && lastMsg.from_user_id !== currentUser.id) {
+                                    const { data: sender } = await supabaseClient.from('users').select('display_name').eq('id', lastMsg.from_user_id).single();
+                                    sendPushNotification(`💬 ${sender?.display_name || 'Пользователь'}`, lastMsg.content || '🎤 Голосовое сообщение');
                                 }
                             }
-                            
-                            window.currentMessages = messages || [];
-                            await renderPrivateChat(currentContact);
-                        }
-                    } else if (currentChat) {
-                        const { data: messages } = await supabaseClient.from('messages').select('*, users:from_user_id(username, display_name)').eq('chat_id', currentChat).order('created_at');
-                        const currentString = JSON.stringify(messages);
-                        const messagesKey = `group_${currentChat}`;
-                        const lastString = lastMessagesMap.get(messagesKey) || '';
-                        
-                        if (currentString !== lastString) {
-                            lastMessagesMap.set(messagesKey, currentString);
-                            
-                            const newMessages = messages || [];
-                            const oldMessages = lastString ? JSON.parse(lastString) : [];
-                            
-                            if (newMessages.length > oldMessages.length) {
-                                const lastMessage = newMessages[newMessages.length - 1];
-                                if (lastMessage && lastMessage.from_user_id !== currentUser.id) {
-                                    const senderName = lastMessage.users?.display_name || lastMessage.users?.username || 'Пользователь';
-                                    const chatName = window.currentChatName || 'Чат';
-                                    sendPushNotification(`💬 Новое сообщение в ${chatName} от ${senderName}`, lastMessage.content.substring(0, 100));
-                                }
-                            }
-                            
-                            window.currentMessages = messages || [];
-                            await renderGroupChat(currentChat);
                         }
                     }
                 }, 300);
             }
             
-            window.searchAll = async function() {
-                const query = document.getElementById('searchInput').value.toLowerCase();
-                if (activeTab === 'users') {
-                    if (!query) { loadAllUsers(); return; }
-                    let dbQuery = supabaseClient.from('users').select('*').neq('id', currentUser.id);
-                    if (currentUser.invisible_mode) dbQuery = dbQuery.eq('invisible_mode', false);
-                    const { data: users } = await dbQuery.or(`username.ilike.%${query}%,display_name.ilike.%${query}%${!currentUser.hide_phone ? `,phone.ilike.%${query}%` : ''}`);
-                    const container = document.getElementById('usersList');
-                    if (!container) return;
-                    if (!users?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i>Ничего не найдено</div>'; return; }
-                    const { data: contacts } = await supabaseClient.from('contacts').select('contact_id').eq('user_id', currentUser.id);
-                    const contactIds = new Set(contacts?.map(c => c.contact_id) || []);
-                    container.innerHTML = users.map(u => {
-                        const avatarHtml = u.avatar_url ? `<img src="${u.avatar_url}" alt="avatar">` : `<i class="fas fa-user"></i>`;
-                        return `<div class="user-item">
-                            <div class="user-avatar-small" style="background: ${u.avatar_color || '#9b59b6'}">${avatarHtml}</div>
-                            <div class="user-info-small">
-                                <div class="contact-name">${escapeHtml(u.display_name || u.username)}</div>
-                                ${!u.hide_phone && u.phone ? `<div><i class="fas fa-phone"></i> ${escapeHtml(u.phone)}</div>` : ''}
-                            </div>
-                            ${!contactIds.has(u.id) ? `<button class="add-btn" onclick="showAddContactModal('${u.id}', '${escapeHtml(u.display_name || u.username)}')"><i class="fas fa-user-plus"></i> Добавить</button>` : '<span><i class="fas fa-check"></i> в контактах</span>'}
-                        </div>`;
-                    }).join('');
-                } else if (activeTab === 'contacts') {
-                    if (!query) { loadContacts(); return; }
-                    const { data: contacts } = await supabaseClient.from('contacts').select(`contact_id, nickname, users:contact_id(*)`).eq('user_id', currentUser.id);
-                    const filtered = contacts?.filter(c => (c.nickname || c.users.display_name || c.users.username).toLowerCase().includes(query)) || [];
-                    const container = document.getElementById('contactsList');
-                    if (!container) return;
-                    if (!filtered.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i>Ничего не найдено</div>'; return; }
-                    container.innerHTML = filtered.map(c => {
-                        const u = c.users;
-                        const avatarHtml = u.avatar_url ? `<img src="${u.avatar_url}" alt="avatar">` : `<i class="fas fa-user"></i>`;
-                        return `<div class="contact-item" onclick="selectContact('${u.id}')" data-contact-id="${u.id}">
-                            <div class="contact-avatar" style="background: ${u.avatar_color || '#9b59b6'}">${avatarHtml}</div>
-                            <div class="contact-info"><div class="contact-name">${escapeHtml(c.nickname || u.display_name || u.username)}</div></div>
-                        </div>`;
-                    }).join('');
-                } else if (activeTab === 'chats') {
-                    if (!query) { loadMyChats(); return; }
-                    const { data: memberships } = await supabaseClient.from('chat_members').select('chat_id, chats(*)').eq('user_id', currentUser.id);
-                    const filtered = memberships?.filter(m => m.chats.name.toLowerCase().includes(query)) || [];
-                    const container = document.getElementById('chatsList');
-                    if (!container) return;
-                    if (!filtered.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i>Ничего не найдено</div>'; return; }
-                    container.innerHTML = filtered.map(m => {
-                        const chat = m.chats;
-                        const typeIcon = chat.type === 'group' ? '<i class="fas fa-users"></i>' : '<i class="fas fa-broadcast-tower"></i>';
-                        return `<div class="chat-item" onclick="selectChat('${chat.id}', '${chat.type}')" data-chat-id="${chat.id}">
-                            <div class="chat-avatar" style="background: ${chat.avatar_color || '#8dc63f'}">${typeIcon}</div>
-                            <div class="chat-info"><div class="chat-name">${escapeHtml(chat.name)}</div></div>
-                        </div>`;
-                    }).join('');
-                } else if (activeTab === 'public') {
-                    if (!query) { loadPublicChannels(); return; }
-                    const { data: channels } = await supabaseClient.from('chats').select('*').eq('type', 'channel').eq('is_private', false).ilike('name', `%${query}%`);
-                    const container = document.getElementById('publicChannelsList');
-                    if (!container) return;
-                    if (!channels?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i>Ничего не найдено</div>'; return; }
-                    const { data: memberships } = await supabaseClient.from('chat_members').select('chat_id').eq('user_id', currentUser.id);
-                    const myChatIds = new Set(memberships?.map(m => m.chat_id) || []);
-                    container.innerHTML = channels.map(ch => `
-                        <div class="channel-item" onclick="joinPublicChannel('${ch.id}')">
-                            <div class="channel-avatar" style="background: ${ch.avatar_color || '#8dc63f'}"><i class="fas fa-broadcast-tower"></i></div>
-                            <div class="chat-info">
-                                <div class="chat-name">${escapeHtml(ch.name)}</div>
-                                <div class="chat-type"><i class="fas fa-globe"></i> Публичный канал</div>
-                                ${ch.description ? `<div style="font-size:10px;color:#666;">${escapeHtml(ch.description.substring(0, 50))}</div>` : ''}
-                            </div>
-                            ${!myChatIds.has(ch.id) ? `<button class="join-btn" onclick="event.stopPropagation(); joinPublicChannel('${ch.id}')" title="Подписаться"><i class="fas fa-plus-circle"></i></button>` : '<span><i class="fas fa-check"></i> подписан</span>'}
-                        </div>
-                    `).join('');
-                }
-            };
-            
             window.switchTab = function(tab) {
-                activeTab = tab;
                 const contactsList = document.getElementById('contactsList');
                 const usersList = document.getElementById('usersList');
-                const chatsList = document.getElementById('chatsList');
-                const publicList = document.getElementById('publicChannelsList');
-                
-                if (contactsList) contactsList.style.display = tab === 'contacts' ? 'block' : 'none';
-                if (usersList) usersList.style.display = tab === 'users' ? 'block' : 'none';
-                if (chatsList) chatsList.style.display = tab === 'chats' ? 'block' : 'none';
-                if (publicList) publicList.style.display = tab === 'public' ? 'block' : 'none';
-                
-                document.querySelectorAll('.tab').forEach((t, i) => {
+                const tabs = document.querySelectorAll('.tab');
+                tabs.forEach((t, i) => {
                     t.classList.remove('active');
-                    if ((tab === 'contacts' && i === 0) || (tab === 'users' && i === 1) || (tab === 'chats' && i === 2) || (tab === 'public' && i === 3)) t.classList.add('active');
+                    if ((tab === 'contacts' && i === 0) || (tab === 'users' && i === 1)) t.classList.add('active');
                 });
-                if (tab === 'users') loadAllUsers();
-                if (tab === 'chats') loadMyChats();
-                if (tab === 'public') loadPublicChannels();
-                
-                const searchInput = document.getElementById('searchInput');
-                if (searchInput) searchInput.value = '';
+                if (tab === 'contacts') { contactsList.style.display = 'block'; usersList.style.display = 'none'; }
+                else { contactsList.style.display = 'none'; usersList.style.display = 'block'; loadAllUsers(); }
             };
             
             window.openSettings = function() {
-                const modal = document.createElement('div');
-                modal.className = 'modal';
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        <h3><i class="fas fa-cog"></i> Настройки профиля</h3>
-                        <input type="text" id="settingsDisplayName" placeholder="Отображаемое имя" value="${escapeHtml(currentUser.display_name || '')}">
-                        <textarea id="settingsBio" rows="3" placeholder="О себе">${escapeHtml(currentUser.bio || '')}</textarea>
-                        <div class="phone-row">
-                            <select id="settingsCountryCode"><option value="+7">+7</option><option value="+1">+1</option><option value="+44">+44</option></select>
-                            <input type="tel" id="settingsPhone" placeholder="Номер" value="${currentUser.phone ? currentUser.phone.replace(/^\+?\d+/, '') : ''}">
-                        </div>
-                        <div class="checkbox-row"><input type="checkbox" id="settingsHidePhone" ${currentUser.hide_phone ? 'checked' : ''}><label><i class="fas fa-eye-slash"></i> Скрыть номер</label></div>
-                        <div class="checkbox-row"><input type="checkbox" id="settingsInvisibleMode" ${currentUser.invisible_mode ? 'checked' : ''}><label><i class="fas fa-user-secret"></i> Невидимый режим</label></div>
-                        <div class="checkbox-row"><input type="checkbox" id="settingsNotifications" ${notificationsEnabled ? 'checked' : ''}><label><i class="fas fa-bell"></i> Включить уведомления</label></div>
-                        <button class="save-btn" onclick="saveSettings()"><i class="fas fa-save"></i> Сохранить</button>
-                        <button class="cancel-btn" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i> Отмена</button>
-                    </div>
-                `;
-                document.body.appendChild(modal);
+                alert('⚙️ Настройки профиля в разработке');
             };
-            
-            window.saveSettings = async function() {
-                const displayName = document.getElementById('settingsDisplayName').value.trim();
-                const bio = document.getElementById('settingsBio').value.trim();
-                const phoneNumber = document.getElementById('settingsPhone').value.trim();
-                const hidePhone = document.getElementById('settingsHidePhone').checked;
-                const invisibleMode = document.getElementById('settingsInvisibleMode').checked;
-                const enableNotifications = document.getElementById('settingsNotifications').checked;
-                
-                if (!displayName) { alert('Введите имя'); return; }
-                
-                const { error } = await supabaseClient.from('users').update({
-                    display_name: displayName, bio, hide_phone: hidePhone, invisible_mode: invisibleMode
-                }).eq('id', currentUser.id);
-                
-                if (error) { alert('Ошибка'); return; }
-                
-                currentUser.display_name = displayName; 
-                currentUser.bio = bio; 
-                currentUser.hide_phone = hidePhone; 
-                currentUser.invisible_mode = invisibleMode;
-                saveSession(currentUser);
-                
-                if (enableNotifications && !notificationsEnabled) {
-                    await requestNotificationPermission();
-                } else if (!enableNotifications && notificationsEnabled) {
-                    notificationsEnabled = false;
-                }
-                
-                document.querySelector('.modal')?.remove();
-                await loadMainScreen();
-                showNotification('Профиль обновлён');
-            };
-            
-            window.startCall = function(contactId, type) { alert(`🔔 ${type === 'audio' ? 'Аудиозвонок' : 'Видеозвонок'} (в разработке)`); };
             
             window.logout = async function() {
                 if (currentUser) await supabaseClient.from('users').update({ status: 'offline' }).eq('id', currentUser.id);
                 if (autoUpdateInterval) clearInterval(autoUpdateInterval);
-                clearSession(); 
-                currentUser = null; 
-                currentContact = null; 
-                currentChat = null;
+                clearSession(); currentUser = null; currentContact = null;
                 isMainScreenLoaded = false;
                 showAuth();
             };
