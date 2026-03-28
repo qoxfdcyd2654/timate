@@ -94,6 +94,20 @@
             color: #2ecc71;
         }
 
+        .logout-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: #f0f0f0;
+        }
+
         .search-box {
             padding: 15px;
             border-bottom: 1px solid #eee;
@@ -191,6 +205,26 @@
             color: #999;
         }
 
+        .call-buttons {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .call-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 6px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .call-btn:hover {
+            background: #f0f0f0;
+        }
+
         .add-btn {
             background: #9b59b6;
             color: white;
@@ -229,6 +263,10 @@
             font-size: 20px;
         }
 
+        .chat-header-info {
+            flex: 1;
+        }
+
         .chat-header-info h3 {
             color: #2c3e50;
             font-size: 18px;
@@ -237,6 +275,21 @@
         .chat-header-info p {
             font-size: 12px;
             color: #2ecc71;
+        }
+
+        .call-controls {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        .call-controls button {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
         }
 
         .messages-container {
@@ -320,7 +373,7 @@
         }
 
         .login-screen {
-            width: 400px;
+            width: 450px;
             background: rgba(255, 255, 255, 0.98);
             border-radius: 28px;
             padding: 40px;
@@ -339,7 +392,7 @@
             margin-bottom: 25px;
         }
 
-        .login-screen input {
+        .login-screen input, .login-screen select {
             width: 100%;
             padding: 12px 15px;
             margin: 10px 0;
@@ -350,13 +403,29 @@
             transition: all 0.2s;
         }
 
-        .login-screen input:focus {
+        .login-screen input:focus, .login-screen select:focus {
             border-color: #9b59b6;
         }
 
-        .login-screen input.error {
+        .login-screen input.error, .login-screen select.error {
             border-color: #e74c3c;
             background-color: #fff5f5;
+        }
+
+        .phone-row {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .phone-row select {
+            width: 35%;
+            margin: 0;
+        }
+
+        .phone-row input {
+            width: 65%;
+            margin: 0;
         }
 
         .login-screen button {
@@ -394,6 +463,62 @@
             padding: 30px;
             color: #999;
         }
+
+        /* Call modal */
+        .call-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .call-window {
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            text-align: center;
+            min-width: 300px;
+        }
+
+        .call-window h3 {
+            margin-bottom: 20px;
+        }
+
+        .call-window video {
+            width: 100%;
+            max-width: 400px;
+            border-radius: 12px;
+            margin: 10px 0;
+        }
+
+        .call-window button {
+            padding: 12px 24px;
+            margin: 10px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+
+        .accept-call {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .reject-call {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .end-call {
+            background: #e74c3c;
+            color: white;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -410,16 +535,70 @@
             let currentUser = null;
             let currentContact = null;
             let messagesSubscription = null;
-            let isLoginMode = true; // true = вход, false = регистрация
+            let isLoginMode = true;
             
-            // ========== ЭКРАН ВХОДА/РЕГИСТРАЦИИ ==========
+            // Phone countries
+            const countries = [
+                { code: "+7", name: "🇷🇺 Россия" },
+                { code: "+1", name: "🇺🇸 США/Канада" },
+                { code: "+44", name: "🇬🇧 Великобритания" },
+                { code: "+49", name: "🇩🇪 Германия" },
+                { code: "+33", name: "🇫🇷 Франция" },
+                { code: "+34", name: "🇪🇸 Испания" },
+                { code: "+39", name: "🇮🇹 Италия" },
+                { code: "+86", name: "🇨🇳 Китай" },
+                { code: "+81", name: "🇯🇵 Япония" },
+                { code: "+82", name: "🇰🇷 Корея" },
+                { code: "+55", name: "🇧🇷 Бразилия" },
+                { code: "+91", name: "🇮🇳 Индия" },
+                { code: "+61", name: "🇦🇺 Австралия" },
+                { code: "+380", name: "🇺🇦 Украина" },
+                { code: "+375", name: "🇧🇾 Беларусь" },
+                { code: "+7", name: "🇰🇿 Казахстан" }
+            ];
+            
+            // Check saved session
+            const savedUser = localStorage.getItem('timate_user');
+            if (savedUser) {
+                try {
+                    const user = JSON.parse(savedUser);
+                    if (user.id && user.username) {
+                        currentUser = user;
+                        supabaseClient.from('users').update({ status: 'online' }).eq('id', currentUser.id);
+                        loadMainScreen();
+                    } else {
+                        showAuth();
+                    }
+                } catch(e) {
+                    showAuth();
+                }
+            } else {
+                showAuth();
+            }
+            
+            function saveSession(user) {
+                localStorage.setItem('timate_user', JSON.stringify(user));
+            }
+            
+            function clearSession() {
+                localStorage.removeItem('timate_user');
+            }
+            
             async function showAuth() {
+                const countryOptions = countries.map(c => `<option value="${c.code}">${c.name} (${c.code})</option>`).join('');
+                
                 document.getElementById('app').innerHTML = `
                     <div class="login-screen">
                         <h1>💚 Timate</h1>
                         <p>${isLoginMode ? 'вход в аккаунт' : 'создание аккаунта'}</p>
                         <input type="text" id="authUsername" placeholder="Имя пользователя">
                         <input type="text" id="authDisplayName" placeholder="Отображаемое имя" style="${isLoginMode ? 'display:none' : 'display:block'}">
+                        <div class="phone-row" style="${isLoginMode ? 'display:none' : 'display:flex'}">
+                            <select id="authCountryCode">
+                                ${countryOptions}
+                            </select>
+                            <input type="tel" id="authPhone" placeholder="Номер телефона">
+                        </div>
                         <input type="password" id="authPassword" placeholder="Пароль">
                         <input type="password" id="authConfirmPassword" placeholder="Повторите пароль" style="${isLoginMode ? 'display:none' : 'display:block'}">
                         <button onclick="window.submitAuth()">${isLoginMode ? 'Войти' : 'Зарегистрироваться'}</button>
@@ -436,87 +615,64 @@
                 showAuth();
             };
             
-            function showAuthError(msg) {
-                const errorDiv = document.getElementById('authError');
-                if (errorDiv) {
-                    errorDiv.textContent = msg;
-                    setTimeout(() => errorDiv.textContent = '', 3000);
-                }
-            }
-            
-            function clearInputErrors() {
-                document.querySelectorAll('.login-screen input').forEach(input => {
-                    input.classList.remove('error');
-                });
-            }
-            
-            function highlightEmptyFields(fields) {
-                fields.forEach(fieldId => {
-                    const input = document.getElementById(fieldId);
-                    if (input && !input.value.trim()) {
-                        input.classList.add('error');
-                    }
-                });
+            function validatePhone(phone) {
+                const phoneRegex = /^[0-9\s\-\(\)]{5,20}$/;
+                return phoneRegex.test(phone) && phone.replace(/[^0-9]/g, '').length >= 5;
             }
             
             window.submitAuth = async function() {
-                clearInputErrors();
-                
                 const username = document.getElementById('authUsername').value.trim();
                 const password = document.getElementById('authPassword').value;
                 const displayName = document.getElementById('authDisplayName')?.value.trim() || username;
-                const confirmPassword = document.getElementById('authConfirmPassword')?.value;
                 
-                // Проверка на пустые поля
-                const requiredFields = isLoginMode 
-                    ? ['authUsername', 'authPassword']
-                    : ['authUsername', 'authDisplayName', 'authPassword', 'authConfirmPassword'];
+                // Clear errors
+                document.querySelectorAll('.login-screen input, .login-screen select').forEach(el => el.classList.remove('error'));
                 
-                const emptyFields = requiredFields.filter(fieldId => {
-                    const input = document.getElementById(fieldId);
-                    return !input || !input.value.trim();
-                });
-                
-                if (emptyFields.length > 0) {
-                    highlightEmptyFields(emptyFields);
-                    showAuthError('❌ Заполните все поля');
+                if (!username || !password) {
+                    if (!username) document.getElementById('authUsername').classList.add('error');
+                    if (!password) document.getElementById('authPassword').classList.add('error');
+                    showAuthError('❌ Заполните имя пользователя и пароль');
                     return;
                 }
                 
-                if (!isLoginMode && password !== confirmPassword) {
-                    showAuthError('❌ Пароли не совпадают');
-                    document.getElementById('authPassword').classList.add('error');
-                    document.getElementById('authConfirmPassword').classList.add('error');
-                    return;
-                }
-                
-                if (password.length < 3) {
-                    showAuthError('❌ Пароль должен быть не менее 3 символов');
-                    document.getElementById('authPassword').classList.add('error');
-                    return;
-                }
-                
-                if (isLoginMode) {
-                    // ВХОД
-                    const { data: user, error } = await supabaseClient
-                        .from('users')
-                        .select('*')
-                        .eq('username', username)
-                        .single();
+                if (!isLoginMode) {
+                    const phoneCode = document.getElementById('authCountryCode').value;
+                    const phoneNumber = document.getElementById('authPhone').value.trim();
+                    const confirmPassword = document.getElementById('authConfirmPassword').value;
                     
-                    if (!user || user.password !== password) {
-                        showAuthError('❌ Неверное имя пользователя или пароль');
-                        document.getElementById('authUsername').classList.add('error');
-                        document.getElementById('authPassword').classList.add('error');
+                    if (!displayName) {
+                        document.getElementById('authDisplayName').classList.add('error');
+                        showAuthError('❌ Введите отображаемое имя');
                         return;
                     }
                     
-                    currentUser = user;
-                    await supabaseClient.from('users').update({ status: 'online' }).eq('id', currentUser.id);
-                    await loadMainScreen();
+                    if (!phoneNumber) {
+                        document.getElementById('authPhone').classList.add('error');
+                        showAuthError('❌ Введите номер телефона');
+                        return;
+                    }
                     
-                } else {
-                    // РЕГИСТРАЦИЯ
+                    if (!validatePhone(phoneNumber)) {
+                        document.getElementById('authPhone').classList.add('error');
+                        showAuthError('❌ Введите корректный номер телефона');
+                        return;
+                    }
+                    
+                    if (password !== confirmPassword) {
+                        document.getElementById('authPassword').classList.add('error');
+                        document.getElementById('authConfirmPassword').classList.add('error');
+                        showAuthError('❌ Пароли не совпадают');
+                        return;
+                    }
+                    
+                    if (password.length < 3) {
+                        document.getElementById('authPassword').classList.add('error');
+                        showAuthError('❌ Пароль должен быть не менее 3 символов');
+                        return;
+                    }
+                    
+                    const fullPhone = phoneCode + phoneNumber.replace(/[^0-9]/g, '');
+                    
                     const { data: existing } = await supabaseClient
                         .from('users')
                         .select('*')
@@ -524,8 +680,20 @@
                         .single();
                     
                     if (existing) {
-                        showAuthError('❌ Пользователь с таким именем уже существует');
                         document.getElementById('authUsername').classList.add('error');
+                        showAuthError('❌ Пользователь с таким именем уже существует');
+                        return;
+                    }
+                    
+                    const { data: existingPhone } = await supabaseClient
+                        .from('users')
+                        .select('*')
+                        .eq('phone', fullPhone)
+                        .single();
+                    
+                    if (existingPhone) {
+                        document.getElementById('authPhone').classList.add('error');
+                        showAuthError('❌ Этот номер телефона уже зарегистрирован');
                         return;
                     }
                     
@@ -535,6 +703,7 @@
                             username: username,
                             display_name: displayName,
                             password: password,
+                            phone: fullPhone,
                             avatar_color: '#9b59b6',
                             status: 'online'
                         })
@@ -547,6 +716,27 @@
                     }
                     
                     currentUser = newUser;
+                    saveSession(currentUser);
+                    await loadMainScreen();
+                    
+                } else {
+                    // LOGIN
+                    const { data: user, error } = await supabaseClient
+                        .from('users')
+                        .select('*')
+                        .eq('username', username)
+                        .single();
+                    
+                    if (!user || user.password !== password) {
+                        document.getElementById('authUsername').classList.add('error');
+                        document.getElementById('authPassword').classList.add('error');
+                        showAuthError('❌ Неверное имя пользователя или пароль');
+                        return;
+                    }
+                    
+                    currentUser = user;
+                    saveSession(currentUser);
+                    await supabaseClient.from('users').update({ status: 'online' }).eq('id', currentUser.id);
                     await loadMainScreen();
                 }
             };
@@ -562,6 +752,7 @@
                                     <div class="user-name">${escapeHtml(currentUser.display_name || currentUser.username)}</div>
                                     <div class="user-status">🟢 онлайн</div>
                                 </div>
+                                <button class="logout-btn" onclick="window.logout()" title="Выйти">🚪</button>
                             </div>
                             <div class="search-box">
                                 <input type="text" id="searchInput" placeholder="🔍 Поиск пользователей..." oninput="window.searchUsers()">
@@ -584,10 +775,21 @@
                 setupRealtime();
             }
             
+            window.logout = async function() {
+                if (currentUser) {
+                    await supabaseClient.from('users').update({ status: 'offline' }).eq('id', currentUser.id);
+                }
+                clearSession();
+                currentUser = null;
+                currentContact = null;
+                if (messagesSubscription) messagesSubscription.unsubscribe();
+                showAuth();
+            };
+            
             async function loadContacts() {
                 const { data: contacts } = await supabaseClient
                     .from('contacts')
-                    .select(`contact_id, nickname, users:contact_id(id, username, display_name, avatar_color, status)`)
+                    .select(`contact_id, nickname, users:contact_id(id, username, display_name, avatar_color, status, phone)`)
                     .eq('user_id', currentUser.id);
                 
                 const container = document.getElementById('contactsList');
@@ -603,6 +805,10 @@
                         <div class="contact-info">
                             <div class="contact-name">${escapeHtml(c.nickname || u.display_name || u.username)}</div>
                             <div class="contact-status ${u.status === 'online' ? 'online' : 'offline'}">${u.status === 'online' ? '🟢 онлайн' : '⚫ офлайн'}</div>
+                        </div>
+                        <div class="call-buttons">
+                            <button class="call-btn" onclick="event.stopPropagation(); window.startCall('${u.id}', 'audio')" title="Аудиозвонок">📞</button>
+                            <button class="call-btn" onclick="event.stopPropagation(); window.startCall('${u.id}', 'video')" title="Видеозвонок">📹</button>
                         </div>
                     </div>`;
                 }).join('');
@@ -625,6 +831,7 @@
                         <div class="user-info-small">
                             <div class="contact-name">${escapeHtml(u.display_name || u.username)}</div>
                             <div style="font-size:11px;color:#999;">@${escapeHtml(u.username)}</div>
+                            ${u.phone ? `<div style="font-size:10px;color:#8dc63f;">${escapeHtml(u.phone)}</div>` : ''}
                         </div>
                         ${!contactIds.has(u.id) ? `<button class="add-btn" onclick="window.addContact('${u.id}')">➕ Добавить</button>` : '<span style="font-size:12px;color:#8dc63f;">✓ в контактах</span>'}
                     </div>
@@ -635,7 +842,7 @@
                 const query = document.getElementById('searchInput').value.toLowerCase();
                 if (!query) { loadAllUsers(); return; }
                 
-                const { data: users } = await supabaseClient.from('users').select('*').neq('id', currentUser.id).or(`username.ilike.%${query}%,display_name.ilike.%${query}%`);
+                const { data: users } = await supabaseClient.from('users').select('*').neq('id', currentUser.id).or(`username.ilike.%${query}%,display_name.ilike.%${query}%,phone.ilike.%${query}%`);
                 const container = document.getElementById('usersList');
                 if (!users || users.length === 0) { container.innerHTML = '<div class="empty-state">🔍 Ничего не найдено</div>'; return; }
                 
@@ -687,7 +894,15 @@
                 chatArea.innerHTML = `
                     <div class="chat-header">
                         <div class="chat-header-avatar" style="background: ${contact?.avatar_color || '#9b59b6'}">${(contact?.display_name || contact?.username || '?').charAt(0).toUpperCase()}</div>
-                        <div class="chat-header-info"><h3>${escapeHtml(contact?.display_name || contact?.username)}</h3><p>${contact?.status === 'online' ? '🟢 онлайн' : '⚫ офлайн'}</p></div>
+                        <div class="chat-header-info">
+                            <h3>${escapeHtml(contact?.display_name || contact?.username)}</h3>
+                            <p>${contact?.status === 'online' ? '🟢 онлайн' : '⚫ офлайн'}</p>
+                            ${contact?.phone ? `<p style="font-size:10px;color:#8dc63f;">${escapeHtml(contact.phone)}</p>` : ''}
+                        </div>
+                        <div class="call-controls">
+                            <button onclick="window.startCall('${currentContact}', 'audio')">📞 Аудио</button>
+                            <button onclick="window.startCall('${currentContact}', 'video')">📹 Видео</button>
+                        </div>
                     </div>
                     <div class="messages-container" id="messagesContainer">
                         ${messages.length === 0 ? '<div class="empty-state">💬 Нет сообщений</div>' : messages.map(msg => `
@@ -716,6 +931,11 @@
                 input.value = '';
                 await loadMessages();
                 await renderChat();
+            };
+            
+            // Simple call simulation (WebRTC would be implemented here)
+            window.startCall = function(contactId, type) {
+                alert(`🔔 ${type === 'audio' ? 'Аудиозвонок' : 'Видеозвонок'} пользователю ${contactId}\n\n(WebRTC интеграция будет добавлена позже)`);
             };
             
             function setupRealtime() {
@@ -748,10 +968,9 @@
             };
             
             function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+            function showAuthError(msg) { const e = document.getElementById('authError'); if(e){ e.textContent=msg; setTimeout(()=>e.textContent='',3000); } }
             
             window.addEventListener('beforeunload', async () => { if(currentUser) await supabaseClient.from('users').update({ status: 'offline' }).eq('id', currentUser.id); });
-            
-            showAuth();
         })();
     </script>
 </body>
