@@ -62,6 +62,7 @@
             color: white;
             font-weight: bold;
             font-size: 20px;
+            cursor: pointer;
         }
         .user-info { flex: 1; }
         .user-name { font-weight: bold; color: #2c3e50; }
@@ -159,7 +160,7 @@
             gap: 8px;
             margin-left: auto;
         }
-        .call-btn, .delete-contact-btn, .invite-btn, .join-btn {
+        .call-btn, .delete-contact-btn {
             background: none;
             border: none;
             cursor: pointer;
@@ -486,16 +487,48 @@
             }
             
             async function sendVoiceMessage(receiverId, audioBlob, text) {
-                const fileName = `voice_${currentUser.id}_${Date.now()}.webm`;
-                const { error } = await supabaseClient.storage.from('voice_messages').upload(fileName, audioBlob);
-                if (error) { console.error('Upload error:', error); return false; }
-                const { data: urlData } = supabaseClient.storage.from('voice_messages').getPublicUrl(fileName);
-                const { error: insertError } = await supabaseClient.from('calls').insert({
-                    caller_id: currentUser.id, receiver_id: receiverId,
-                    audio_url: urlData.publicUrl, text: text, duration: Math.round(audioBlob.size / 1000)
-                });
-                if (insertError) { console.error('Insert error:', insertError); return false; }
-                return true;
+                try {
+                    const fileName = `voice_${currentUser.id}_${Date.now()}.webm`;
+                    console.log('📤 Загружаем аудио:', fileName);
+                    
+                    const { error: uploadError } = await supabaseClient.storage
+                        .from('voice_messages')
+                        .upload(fileName, audioBlob);
+                    
+                    if (uploadError) {
+                        console.error('❌ Ошибка загрузки в storage:', uploadError);
+                        showNotification('Ошибка загрузки голоса');
+                        return false;
+                    }
+                    
+                    const { data: urlData } = supabaseClient.storage
+                        .from('voice_messages')
+                        .getPublicUrl(fileName);
+                    
+                    console.log('📥 Аудио URL:', urlData.publicUrl);
+                    
+                    const { error: insertError } = await supabaseClient
+                        .from('calls')
+                        .insert({
+                            caller_id: currentUser.id,
+                            receiver_id: receiverId,
+                            audio_url: urlData.publicUrl,
+                            text: text,
+                            duration: Math.round(audioBlob.size / 1000)
+                        });
+                    
+                    if (insertError) {
+                        console.error('❌ Ошибка вставки в calls:', insertError);
+                        showNotification('Ошибка сохранения голоса');
+                        return false;
+                    }
+                    
+                    console.log('✅ Голосовое сохранено');
+                    return true;
+                } catch (e) {
+                    console.error('❌ Исключение:', e);
+                    return false;
+                }
             }
             
             function startSpeechToText(callback) {
@@ -517,10 +550,13 @@
                         startSpeechToText(async (text, error) => {
                             const finalText = text || '🎤 Голосовое сообщение';
                             if (currentContact) {
-                                await sendVoiceMessage(currentContact, audioBlob, finalText);
-                                showNotification('Голосовое сообщение отправлено');
-                                await loadMessages(currentContact);
-                                await renderChat(currentContact);
+                                const success = await sendVoiceMessage(currentContact, audioBlob, finalText);
+                                if (success) {
+                                    showNotification('Голосовое сообщение отправлено');
+                                    await loadMessages(currentContact);
+                                    await renderChat(currentContact);
+                                    lastMessagesMap.set(`private_${currentContact}`, JSON.stringify(window.currentMessages));
+                                }
                             }
                         });
                     };
@@ -528,6 +564,7 @@
                     isRecording = true;
                     updateRecordButton(true);
                 } catch(e) {
+                    console.error('Микрофон не доступен:', e);
                     showNotification('❌ Нет доступа к микрофону');
                 }
             }
@@ -732,7 +769,7 @@
                         <div class="sidebar">
                             <div class="sidebar-header"><h2><i class="fas fa-comment"></i> Timate</h2><p><i class="fas fa-leaf"></i> свободное общение</p></div>
                             <div class="current-user">
-                                <div class="user-avatar" onclick="document.getElementById('avatarInput').click()" style="cursor:pointer;">${avatarHtml}</div>
+                                <div class="user-avatar" onclick="document.getElementById('avatarInput').click()">${avatarHtml}</div>
                                 <input type="file" id="avatarInput" style="display:none;" accept="image/*" onchange="uploadNewAvatar(this)">
                                 <div class="user-info">
                                     <div class="user-name">${escapeHtml(currentUser.display_name || currentUser.username)}</div>
@@ -904,14 +941,34 @@
             };
             
             async function loadMessages(contactId) {
-                const [messages, voiceMessages] = await Promise.all([
-                    supabaseClient.from('messages').select('*').or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${contactId}),and(from_user_id.eq.${contactId},to_user_id.eq.${currentUser.id})`).order('created_at'),
-                    supabaseClient.from('calls').select('*').or(`and(caller_id.eq.${currentUser.id},receiver_id.eq.${contactId}),and(caller_id.eq.${contactId},receiver_id.eq.${currentUser.id})`).order('created_at')
+                const [messagesRes, voiceMessagesRes] = await Promise.all([
+                    supabaseClient
+                        .from('messages')
+                        .select('*')
+                        .or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${contactId}),and(from_user_id.eq.${contactId},to_user_id.eq.${currentUser.id})`)
+                        .order('created_at'),
+                    supabaseClient
+                        .from('calls')
+                        .select('*')
+                        .or(`and(caller_id.eq.${currentUser.id},receiver_id.eq.${contactId}),and(caller_id.eq.${contactId},receiver_id.eq.${currentUser.id})`)
+                        .order('created_at')
                 ]);
-                const allMessages = [
-                    ...(messages.data || []).map(m => ({ ...m, type: 'text' })),
-                    ...(voiceMessages.data || []).map(v => ({ ...v, type: 'voice', from_user_id: v.caller_id, to_user_id: v.receiver_id, content: v.text, audio_url: v.audio_url }))
-                ];
+                
+                const textMessages = (messagesRes.data || []).map(m => ({ 
+                    ...m, 
+                    type: 'text'
+                }));
+                
+                const voiceMessages = (voiceMessagesRes.data || []).map(v => ({ 
+                    ...v, 
+                    type: 'voice', 
+                    from_user_id: v.caller_id, 
+                    to_user_id: v.receiver_id, 
+                    content: v.text || '🎤 Голосовое сообщение',
+                    audio_url: v.audio_url
+                }));
+                
+                const allMessages = [...textMessages, ...voiceMessages];
                 allMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
                 window.currentMessages = allMessages;
             }
