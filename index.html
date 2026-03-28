@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Timate</title>
+    <!-- Font Awesome 6 (стабильные векторные иконки) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -39,7 +41,7 @@
             text-align: center;
         }
         .sidebar-header h2 { color: white; font-size: 26px; }
-        .sidebar-header h2 img { width: 28px; height: 28px; vertical-align: middle; margin-right: 8px; }
+        .sidebar-header h2 i { margin-right: 8px; }
         .sidebar-header p { color: rgba(255,255,255,0.8); font-size: 12px; }
         .current-user {
             padding: 15px;
@@ -64,30 +66,31 @@
         .user-info { flex: 1; }
         .user-name { font-weight: bold; color: #2c3e50; }
         .user-status { font-size: 12px; color: #2ecc71; }
-        .user-status img { width: 10px; height: 10px; vertical-align: middle; margin-right: 4px; }
+        .user-status i { font-size: 8px; margin-right: 4px; }
+        .user-phone { font-size: 10px; color: #999; margin-top: 2px; }
+        .user-bio { font-size: 11px; color: #666; margin-top: 2px; font-style: italic; }
         .settings-btn, .logout-btn {
             background: none;
             border: none;
             cursor: pointer;
+            font-size: 18px;
             padding: 8px;
             border-radius: 50%;
             transition: background 0.2s;
+            color: #666;
         }
-        .settings-btn img, .logout-btn img { width: 20px; height: 20px; vertical-align: middle; }
         .settings-btn:hover, .logout-btn:hover { background: #f0f0f0; }
         .search-box { padding: 15px; border-bottom: 1px solid #eee; position: relative; }
-        .search-box img {
+        .search-box i {
             position: absolute;
             left: 28px;
             top: 50%;
             transform: translateY(-50%);
-            width: 16px;
-            height: 16px;
-            opacity: 0.6;
+            color: #999;
         }
         .search-box input {
             width: 100%;
-            padding: 10px 12px 10px 38px;
+            padding: 10px 12px 10px 35px;
             border: 1px solid #e0e0e0;
             border-radius: 20px;
             outline: none;
@@ -108,18 +111,18 @@
             color: #666;
             transition: all 0.2s;
         }
-        .tab img { width: 18px; height: 18px; vertical-align: middle; margin-right: 6px; }
+        .tab i { margin-right: 6px; }
         .tab.active {
             background: white;
             color: #9b59b6;
             border-bottom: 2px solid #9b59b6;
         }
-        .chats-list {
+        .contacts-list, .users-list, .chats-list {
             flex: 1;
             overflow-y: auto;
             background: white;
         }
-        .chat-item {
+        .contact-item, .user-item, .chat-item {
             padding: 12px 15px;
             display: flex;
             align-items: center;
@@ -128,26 +131,57 @@
             border-bottom: 1px solid #f5f5f5;
             transition: background 0.2s;
         }
-        .chat-item:hover { background: #f8f9fa; }
-        .chat-item.active {
+        .contact-item:hover, .user-item:hover, .chat-item:hover { background: #f8f9fa; }
+        .contact-item.active, .chat-item.active {
             background: #f3e5f5;
             border-left: 3px solid #9b59b6;
         }
-        .chat-avatar {
+        .contact-avatar, .user-avatar-small, .chat-avatar {
             width: 44px;
             height: 44px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #8dc63f;
-            font-size: 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
             flex-shrink: 0;
+            background: #9b59b6;
         }
-        .chat-avatar img { width: 24px; height: 24px; }
-        .chat-info { flex: 1; }
-        .chat-name { font-weight: 600; color: #2c3e50; }
-        .chat-type { font-size: 10px; color: #8dc63f; margin-top: 2px; }
+        .contact-avatar i, .user-avatar-small i, .chat-avatar i { font-size: 20px; }
+        .contact-info, .user-info-small, .chat-info { flex: 1; }
+        .contact-name, .chat-name { font-weight: 600; color: #2c3e50; }
+        .contact-status, .chat-type { font-size: 11px; }
+        .contact-status.online { color: #2ecc71; }
+        .contact-status.offline { color: #999; }
+        .contact-phone, .contact-bio { font-size: 10px; color: #8dc63f; margin-top: 2px; }
+        .contact-actions, .call-buttons {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+        .call-btn, .delete-contact-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 6px;
+            border-radius: 50%;
+            transition: background 0.2s;
+            color: #666;
+        }
+        .call-btn:hover, .delete-contact-btn:hover { background: #f0f0f0; }
+        .delete-contact-btn { color: #e74c3c; }
+        .add-btn {
+            background: #9b59b6;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+        }
         .create-chat-btn {
             margin: 10px;
             padding: 10px;
@@ -159,7 +193,7 @@
             font-weight: 600;
             transition: transform 0.1s;
         }
-        .create-chat-btn img { width: 16px; height: 16px; vertical-align: middle; margin-right: 8px; filter: brightness(0) invert(1); }
+        .create-chat-btn i { margin-right: 8px; }
         .create-chat-btn:hover { transform: scale(1.02); }
         .chat-area {
             flex: 1;
@@ -182,13 +216,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #8dc63f;
+            background: #9b59b6;
+            color: white;
+            font-size: 24px;
         }
-        .chat-header-avatar img { width: 28px; height: 28px; }
         .chat-header-info { flex: 1; }
         .chat-header-info h3 { color: #2c3e50; font-size: 18px; }
         .chat-header-info p { font-size: 12px; color: #2ecc71; }
-        .chat-header-info p img { width: 10px; height: 10px; vertical-align: middle; margin-right: 4px; }
+        .chat-header-info .phone, .chat-header-info .bio { font-size: 11px; color: #8dc63f; margin-top: 2px; }
+        .chat-actions { display: flex; gap: 10px; }
         .chat-actions button {
             background: #9b59b6;
             color: white;
@@ -196,10 +232,8 @@
             padding: 8px 16px;
             border-radius: 20px;
             cursor: pointer;
-            transition: transform 0.1s;
         }
-        .chat-actions button img { width: 14px; height: 14px; vertical-align: middle; margin-right: 6px; filter: brightness(0) invert(1); }
-        .chat-actions button:hover { transform: scale(1.02); }
+        .chat-actions button i { margin-right: 6px; }
         .messages-container {
             flex: 1;
             padding: 20px;
@@ -233,10 +267,10 @@
             margin-bottom: 4px;
             opacity: 0.8;
         }
-        .message-sender img { width: 12px; height: 12px; vertical-align: middle; margin-right: 4px; }
+        .message-sender i { margin-right: 4px; font-size: 10px; }
         .message-text { word-wrap: break-word; font-size: 14px; }
         .message-time { font-size: 10px; margin-top: 5px; opacity: 0.7; text-align: right; }
-        .message-time img { width: 10px; height: 10px; vertical-align: middle; margin-right: 4px; }
+        .message-time i { margin-right: 4px; font-size: 9px; }
         .input-area {
             padding: 15px 20px;
             background: white;
@@ -261,10 +295,8 @@
             border-radius: 25px;
             cursor: pointer;
             font-weight: 600;
-            transition: transform 0.1s;
         }
-        .input-area button img { width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; filter: brightness(0) invert(1); }
-        .input-area button:hover { transform: scale(1.02); }
+        .input-area button i { margin-right: 6px; }
         .modal {
             position: fixed;
             top: 0;
@@ -287,7 +319,7 @@
             overflow-y: auto;
         }
         .modal-content h3 { margin-bottom: 20px; color: #8dc63f; }
-        .modal-content h3 img { width: 24px; height: 24px; vertical-align: middle; margin-right: 8px; }
+        .modal-content h3 i { margin-right: 8px; }
         .modal-content h4 { margin: 15px 0 10px; color: #9b59b6; }
         .modal-content input, .modal-content select, .modal-content textarea {
             width: 100%;
@@ -303,21 +335,19 @@
             gap: 10px;
             margin: 15px 0;
         }
-        .modal-content .checkbox-row img { width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; }
+        .modal-content .checkbox-row input { width: auto; margin: 0; }
         .modal-content button {
             padding: 10px 20px;
             margin: 10px 5px;
             border: none;
             border-radius: 20px;
             cursor: pointer;
-            transition: transform 0.1s;
         }
-        .modal-content button img { width: 14px; height: 14px; vertical-align: middle; margin-right: 6px; }
         .save-btn { background: #8dc63f; color: white; }
         .cancel-btn { background: #e74c3c; color: white; }
         .accept-btn { background: #9b59b6; color: white; }
         .empty-state { text-align: center; padding: 30px; color: #999; }
-        .empty-state img { width: 48px; height: 48px; margin-bottom: 15px; opacity: 0.5; }
+        .empty-state i { font-size: 48px; margin-bottom: 15px; display: block; color: #ccc; }
         .notification {
             position: fixed;
             bottom: 20px;
@@ -329,7 +359,7 @@
             z-index: 1000;
             animation: fadeOut 3s forwards;
         }
-        .notification img { width: 16px; height: 16px; vertical-align: middle; margin-right: 8px; filter: brightness(0) invert(1); }
+        .notification i { margin-right: 8px; }
         @keyframes fadeOut {
             0% { opacity: 1; }
             70% { opacity: 1; }
@@ -344,7 +374,7 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
         .login-screen h1 { color: #8dc63f; margin-bottom: 8px; font-size: 32px; }
-        .login-screen h1 img { width: 36px; height: 36px; vertical-align: middle; margin-right: 10px; }
+        .login-screen h1 i { margin-right: 10px; }
         .login-screen input, .login-screen select {
             width: 100%;
             padding: 12px;
@@ -365,10 +395,8 @@
             border: none;
             border-radius: 25px;
             cursor: pointer;
-            transition: transform 0.1s;
         }
-        .login-screen button img { width: 16px; height: 16px; vertical-align: middle; margin-right: 8px; filter: brightness(0) invert(1); }
-        .login-screen button:hover { transform: scale(1.02); }
+        .login-screen button i { margin-right: 8px; }
         .switch-mode { margin-top: 15px; color: #9b59b6; cursor: pointer; font-size: 14px; }
         .privacy-link {
             font-size: 12px;
@@ -376,7 +404,7 @@
             margin-top: 15px;
             cursor: pointer;
         }
-        .privacy-link img { width: 14px; height: 14px; vertical-align: middle; margin-right: 4px; }
+        .privacy-link i { margin-right: 4px; }
         .privacy-link span { color: #9b59b6; text-decoration: underline; }
         .error { color: #e74c3c; font-size: 12px; margin-top: 10px; }
     </style>
@@ -393,10 +421,13 @@
             const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
             let currentUser = null;
+            let currentContact = null;
             let currentChat = null;
+            let currentChatType = null;
             let autoUpdateInterval = null;
             let lastMessagesString = '';
             let privacyAccepted = localStorage.getItem('privacy_accepted') === 'true';
+            let activeTab = 'contacts'; // contacts, users, chats
             
             const savedUser = localStorage.getItem('timate_user');
             if (savedUser) {
@@ -415,7 +446,7 @@
             function showNotification(msg) {
                 const notif = document.createElement('div');
                 notif.className = 'notification';
-                notif.innerHTML = `<img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f514.png" alt="bell"> ${msg}`;
+                notif.innerHTML = `<i class="fas fa-bell"></i> ${msg}`;
                 document.body.appendChild(notif);
                 setTimeout(() => notif.remove(), 3000);
             }
@@ -425,35 +456,23 @@
                 modal.className = 'modal';
                 modal.innerHTML = `
                     <div class="modal-content">
-                        <h3><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f6e1.png" alt="shield"> Политика конфиденциальности Timate</h3>
+                        <h3><i class="fas fa-shield-alt"></i> Политика конфиденциальности Timate</h3>
                         <p><strong>Дата вступления в силу:</strong> 28 марта 2026 г.</p>
-                        
                         <h4>1. Какие данные мы собираем</h4>
-                        <p>• Имя пользователя и отображаемое имя<br>• Номер телефона (для входа)<br>• Пароль (хранится в зашифрованном виде)<br>• Сообщения и история чатов<br>• Аватар (если загрузите)</p>
-                        
+                        <p>• Имя пользователя и отображаемое имя<br>• Номер телефона (для входа)<br>• Пароль (хранится в зашифрованном виде)<br>• Сообщения и история чатов</p>
                         <h4>2. Как мы используем данные</h4>
                         <p>• Для обеспечения работы мессенджера<br>• Для идентификации пользователей<br>• Для доставки сообщений</p>
-                        
                         <h4>3. Передача данных третьим лицам</h4>
-                        <p><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/274c.png" alt="no"> Мы НЕ передаём ваши данные третьим лицам.<br>
-                        <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2705.png" alt="yes"> Все данные хранятся в Supabase (облачный сервис).</p>
-                        
-                        <h4>4. Безопасность</h4>
-                        <p>Мы не несём ответственности за взлом вашего аккаунта, если вы передали пароль кому-то ещё. Храните пароль в тайне!</p>
-                        
-                        <h4>5. Удаление данных</h4>
-                        <p>Вы можете удалить свой аккаунт, написав в поддержку. Все ваши сообщения будут удалены.</p>
-                        
-                        <h4>6. Контакты</h4>
+                        <p><i class="fas fa-times-circle" style="color:#e74c3c;"></i> Мы НЕ передаём ваши данные третьим лицам.<br><i class="fas fa-check-circle" style="color:#2ecc71;"></i> Все данные хранятся в Supabase.</p>
+                        <h4>4. Контакты</h4>
                         <p>По вопросам: <a href="https://t.me/TimateBot" target="_blank">@TimateBot</a></p>
-                        
                         <hr>
                         <div class="checkbox-row">
                             <input type="checkbox" id="acceptPrivacy" ${privacyAccepted ? 'checked' : ''}>
-                            <label><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2705.png" alt="check"> Я принимаю условия Политики конфиденциальности</label>
+                            <label><i class="fas fa-check-circle"></i> Я принимаю условия</label>
                         </div>
-                        <button class="accept-btn" onclick="window.acceptPrivacy()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2714.png" alt="ok"> Принять и продолжить</button>
-                        <button class="cancel-btn" onclick="this.closest('.modal').remove()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/274c.png" alt="close"> Закрыть</button>
+                        <button class="accept-btn" onclick="window.acceptPrivacy()"><i class="fas fa-check"></i> Принять</button>
+                        <button class="cancel-btn" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i> Закрыть</button>
                     </div>
                 `;
                 document.body.appendChild(modal);
@@ -461,54 +480,41 @@
             
             window.acceptPrivacy = function() {
                 const checkbox = document.getElementById('acceptPrivacy');
-                if (!checkbox.checked) {
-                    alert('Пожалуйста, примите условия Политики конфиденциальности');
-                    return;
-                }
+                if (!checkbox.checked) { alert('Примите условия'); return; }
                 privacyAccepted = true;
                 localStorage.setItem('privacy_accepted', 'true');
                 document.querySelector('.modal')?.remove();
-                showNotification('Вы приняли условия использования');
+                showNotification('Условия приняты');
             };
             
             async function showAuth() {
                 document.getElementById('app').innerHTML = `
                     <div class="login-screen">
-                        <h1><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4ac.png" alt="chat"> Timate</h1>
+                        <h1><i class="fas fa-comment"></i> Timate</h1>
                         <p>вход по номеру телефона</p>
                         <div class="phone-row">
                             <select id="authCountryCode">
                                 <option value="+7">🇷🇺 Россия (+7)</option>
                                 <option value="+1">🇺🇸 США (+1)</option>
                                 <option value="+44">🇬🇧 Великобритания (+44)</option>
-                                <option value="+49">🇩🇪 Германия (+49)</option>
-                                <option value="+33">🇫🇷 Франция (+33)</option>
-                                <option value="+86">🇨🇳 Китай (+86)</option>
-                                <option value="+380">🇺🇦 Украина (+380)</option>
-                                <option value="+375">🇧🇾 Беларусь (+375)</option>
                             </select>
                             <input type="tel" id="authPhone" placeholder="Номер телефона">
                         </div>
                         <input type="password" id="authPassword" placeholder="Пароль">
-                        <button onclick="window.login()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e5.png" alt="login"> Войти</button>
-                        <div class="switch-mode" onclick="window.showRegister()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e4.png" alt="register"> Нет аккаунта? Зарегистрироваться</div>
-                        <div class="privacy-link" onclick="showPrivacyPolicy()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4c4.png" alt="doc"> <span>Политика конфиденциальности</span></div>
+                        <button onclick="window.login()"><i class="fas fa-sign-in-alt"></i> Войти</button>
+                        <div class="switch-mode" onclick="window.showRegister()"><i class="fas fa-user-plus"></i> Нет аккаунта? Зарегистрироваться</div>
+                        <div class="privacy-link" onclick="showPrivacyPolicy()"><i class="fas fa-file-contract"></i> <span>Политика конфиденциальности</span></div>
                         <div id="authError" class="error"></div>
                     </div>
                 `;
             }
             
             window.login = async function() {
-                if (!privacyAccepted) {
-                    showPrivacyPolicy();
-                    setTimeout(() => { if (!privacyAccepted) alert('Для использования Timate необходимо принять Политику конфиденциальности'); }, 100);
-                    return;
-                }
+                if (!privacyAccepted) { showPrivacyPolicy(); return; }
                 const phone = document.getElementById('authPhone').value;
                 const password = document.getElementById('authPassword').value;
                 const countryCode = document.getElementById('authCountryCode').value;
                 const fullPhone = countryCode + phone.replace(/[^0-9]/g, '');
-                
                 const { data: user } = await supabaseClient.from('users').select('*').eq('phone', fullPhone).single();
                 if (!user || user.password !== password) {
                     document.getElementById('authError').textContent = '❌ Неверный номер или пароль';
@@ -521,35 +527,27 @@
             };
             
             window.showRegister = async function() {
-                if (!privacyAccepted) {
-                    showPrivacyPolicy();
-                    setTimeout(() => { if (!privacyAccepted) alert('Для использования Timate необходимо принять Политику конфиденциальности'); }, 100);
-                    return;
-                }
+                if (!privacyAccepted) { showPrivacyPolicy(); return; }
                 document.getElementById('app').innerHTML = `
                     <div class="login-screen">
-                        <h1><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4ac.png" alt="chat"> Timate</h1>
+                        <h1><i class="fas fa-comment"></i> Timate</h1>
                         <p>регистрация</p>
                         <input type="text" id="regUsername" placeholder="Имя пользователя">
                         <input type="text" id="regDisplayName" placeholder="Отображаемое имя">
+                        <textarea id="regBio" rows="2" placeholder="О себе"></textarea>
                         <div class="phone-row">
                             <select id="regCountryCode">
                                 <option value="+7">🇷🇺 Россия (+7)</option>
                                 <option value="+1">🇺🇸 США (+1)</option>
                                 <option value="+44">🇬🇧 Великобритания (+44)</option>
-                                <option value="+49">🇩🇪 Германия (+49)</option>
-                                <option value="+33">🇫🇷 Франция (+33)</option>
-                                <option value="+86">🇨🇳 Китай (+86)</option>
-                                <option value="+380">🇺🇦 Украина (+380)</option>
-                                <option value="+375">🇧🇾 Беларусь (+375)</option>
                             </select>
                             <input type="tel" id="regPhone" placeholder="Номер телефона">
                         </div>
                         <input type="password" id="regPassword" placeholder="Пароль">
                         <input type="password" id="regConfirmPassword" placeholder="Повторите пароль">
-                        <button onclick="window.register()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2705.png" alt="check"> Зарегистрироваться</button>
-                        <div class="switch-mode" onclick="showAuth()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e5.png" alt="login"> Уже есть аккаунт? Войти</div>
-                        <div class="privacy-link" onclick="showPrivacyPolicy()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4c4.png" alt="doc"> <span>Политика конфиденциальности</span></div>
+                        <button onclick="window.register()"><i class="fas fa-user-check"></i> Зарегистрироваться</button>
+                        <div class="switch-mode" onclick="showAuth()"><i class="fas fa-sign-in-alt"></i> Уже есть аккаунт? Войти</div>
+                        <div class="privacy-link" onclick="showPrivacyPolicy()"><i class="fas fa-file-contract"></i> <span>Политика конфиденциальности</span></div>
                         <div id="regError" class="error"></div>
                     </div>
                 `;
@@ -558,166 +556,262 @@
             window.register = async function() {
                 const username = document.getElementById('regUsername').value;
                 const displayName = document.getElementById('regDisplayName').value;
+                const bio = document.getElementById('regBio').value;
                 const phone = document.getElementById('regPhone').value;
                 const password = document.getElementById('regPassword').value;
                 const confirm = document.getElementById('regConfirmPassword').value;
                 const countryCode = document.getElementById('regCountryCode').value;
-                
                 if (!username || !displayName || !phone || !password) {
                     document.getElementById('regError').textContent = '❌ Заполните все поля';
                     return;
                 }
-                if (password !== confirm) {
-                    document.getElementById('regError').textContent = '❌ Пароли не совпадают';
-                    return;
-                }
-                if (password.length < 3) {
-                    document.getElementById('regError').textContent = '❌ Пароль минимум 3 символа';
-                    return;
-                }
-                
+                if (password !== confirm) { document.getElementById('regError').textContent = '❌ Пароли не совпадают'; return; }
+                if (password.length < 3) { document.getElementById('regError').textContent = '❌ Пароль минимум 3 символа'; return; }
                 const fullPhone = countryCode + phone.replace(/[^0-9]/g, '');
                 const { data: existing } = await supabaseClient.from('users').select('*').eq('phone', fullPhone).single();
-                if (existing) {
-                    document.getElementById('regError').textContent = '❌ Этот номер уже зарегистрирован';
-                    return;
-                }
-                
+                if (existing) { document.getElementById('regError').textContent = '❌ Номер уже зарегистрирован'; return; }
                 const { data: newUser, error } = await supabaseClient.from('users').insert({
-                    username, display_name: displayName, password, phone: fullPhone,
-                    avatar_color: '#9b59b6', status: 'online'
+                    username, display_name: displayName, password, phone: fullPhone, bio,
+                    avatar_color: '#9b59b6', status: 'online', hide_phone: false, invisible_mode: false
                 }).select().single();
-                
-                if (error) { document.getElementById('regError').textContent = '❌ Ошибка: ' + error.message; return; }
-                currentUser = newUser;
-                saveSession(currentUser);
-                await loadMainScreen();
+                if (error) { document.getElementById('regError').textContent = '❌ Ошибка'; return; }
+                currentUser = newUser; saveSession(currentUser); await loadMainScreen();
             };
             
             async function loadMainScreen() {
                 if (autoUpdateInterval) clearInterval(autoUpdateInterval);
-                
                 document.getElementById('app').innerHTML = `
                     <div class="timate-container">
                         <div class="sidebar">
-                            <div class="sidebar-header"><h2><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4ac.png" alt="chat"> Timate</h2><p><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f33f.png" alt="leaf"> свободное общение</p></div>
+                            <div class="sidebar-header"><h2><i class="fas fa-comment"></i> Timate</h2><p><i class="fas fa-leaf"></i> свободное общение</p></div>
                             <div class="current-user">
                                 <div class="user-avatar">${(currentUser.display_name || currentUser.username).charAt(0).toUpperCase()}</div>
                                 <div class="user-info">
                                     <div class="user-name">${escapeHtml(currentUser.display_name || currentUser.username)}</div>
-                                    <div class="user-status"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f535.png" alt="online"> онлайн</div>
+                                    <div class="user-status"><i class="fas fa-circle"></i> онлайн</div>
+                                    ${!currentUser.hide_phone ? `<div class="user-phone"><i class="fas fa-phone"></i> ${escapeHtml(currentUser.phone || '')}</div>` : ''}
+                                    ${currentUser.bio ? `<div class="user-bio"><i class="fas fa-quote-left"></i> ${escapeHtml(currentUser.bio)}</div>` : ''}
                                 </div>
-                                <button class="settings-btn" onclick="openSettings()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2699.png" alt="settings"></button>
-                                <button class="logout-btn" onclick="logout()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f6aa.png" alt="logout"></button>
+                                <button class="settings-btn" onclick="openSettings()"><i class="fas fa-cog"></i></button>
+                                <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
                             </div>
-                            <button class="create-chat-btn" onclick="showCreateChatModal()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2795.png" alt="plus"> Создать группу/канал</button>
+                            <button class="create-chat-btn" onclick="showCreateChatModal()"><i class="fas fa-plus-circle"></i> Создать группу/канал</button>
                             <div class="search-box">
-                                <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f50d.png" alt="search">
-                                <input type="text" id="searchInput" placeholder="Поиск чатов...">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="searchInput" placeholder="Поиск..." oninput="searchAll()">
                             </div>
-                            <div id="chatsList" class="chats-list"><div class="empty-state"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e5.png" alt="inbox">Загрузка...</div></div>
+                            <div class="tabs">
+                                <div class="tab ${activeTab === 'contacts' ? 'active' : ''}" onclick="switchTab('contacts')"><i class="fas fa-users"></i> Контакты</div>
+                                <div class="tab ${activeTab === 'users' ? 'active' : ''}" onclick="switchTab('users')"><i class="fas fa-globe"></i> Все пользователи</div>
+                                <div class="tab ${activeTab === 'chats' ? 'active' : ''}" onclick="switchTab('chats')"><i class="fas fa-layer-group"></i> Группы/Каналы</div>
+                            </div>
+                            <div id="contactsList" class="contacts-list" style="${activeTab === 'contacts' ? 'block' : 'none'}"><div class="empty-state"><i class="fas fa-inbox"></i>Загрузка...</div></div>
+                            <div id="usersList" class="users-list" style="${activeTab === 'users' ? 'block' : 'none'}"></div>
+                            <div id="chatsList" class="chats-list" style="${activeTab === 'chats' ? 'block' : 'none'}"></div>
                         </div>
-                        <div class="chat-area" id="chatArea"><div class="empty-state"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4ac.png" alt="chat">Выберите чат для общения</div></div>
+                        <div class="chat-area" id="chatArea"><div class="empty-state"><i class="fas fa-comment"></i>Выберите чат для общения</div></div>
                     </div>
                 `;
-                await loadMyChats();
+                await loadContacts(); await loadAllUsers(); await loadMyChats();
                 startAutoUpdate();
             }
             
-            async function loadMyChats() {
-                const { data: memberships } = await supabaseClient
-                    .from('chat_members')
-                    .select('chat_id, chats(*)')
-                    .eq('user_id', currentUser.id);
-                
-                const container = document.getElementById('chatsList');
-                if (!memberships?.length) {
-                    container.innerHTML = '<div class="empty-state"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e5.png" alt="inbox">Нет чатов. Создайте группу или подпишитесь на канал</div>';
-                    return;
-                }
-                
-                container.innerHTML = memberships.map(m => {
-                    const chat = m.chats;
-                    const typeIcon = chat.type === 'group' ? '<img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f465.png" alt="group">' : '<img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e2.png" alt="channel">';
-                    const typeText = chat.type === 'group' ? 'Группа' : 'Канал';
-                    return `<div class="chat-item" onclick="selectChat('${chat.id}')" data-chat-id="${chat.id}">
-                        <div class="chat-avatar">${typeIcon}</div>
-                        <div class="chat-info">
-                            <div class="chat-name">${escapeHtml(chat.name)}</div>
-                            <div class="chat-type">${typeText}</div>
+            async function loadContacts() {
+                const { data: contacts } = await supabaseClient.from('contacts').select(`contact_id, nickname, users:contact_id(*)`).eq('user_id', currentUser.id);
+                const container = document.getElementById('contactsList');
+                if (!contacts?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-address-book"></i>Нет контактов</div>'; return; }
+                container.innerHTML = contacts.map(c => {
+                    const u = c.users;
+                    return `<div class="contact-item" onclick="selectContact('${u.id}')" data-contact-id="${u.id}">
+                        <div class="contact-avatar" style="background: ${u.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
+                        <div class="contact-info">
+                            <div class="contact-name">${escapeHtml(c.nickname || u.display_name || u.username)}</div>
+                            <div class="contact-status ${u.status === 'online' ? 'online' : 'offline'}"><i class="fas fa-circle"></i> ${u.status === 'online' ? 'онлайн' : 'офлайн'}</div>
+                            ${!u.hide_phone && u.phone ? `<div class="contact-phone"><i class="fas fa-phone"></i> ${escapeHtml(u.phone)}</div>` : ''}
+                            ${u.bio ? `<div class="contact-bio">${escapeHtml(u.bio.substring(0, 40))}</div>` : ''}
+                        </div>
+                        <div class="contact-actions">
+                            <button class="delete-contact-btn" onclick="event.stopPropagation(); deleteContact('${u.id}')" title="Удалить"><i class="fas fa-trash-alt"></i></button>
+                            <button class="call-btn" onclick="event.stopPropagation(); startCall('${u.id}', 'audio')"><i class="fas fa-phone"></i></button>
+                            <button class="call-btn" onclick="event.stopPropagation(); startCall('${u.id}', 'video')"><i class="fas fa-video"></i></button>
                         </div>
                     </div>`;
                 }).join('');
             }
             
-            window.selectChat = async function(chatId) {
-                currentChat = chatId;
-                document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
-                const activeEl = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
-                if (activeEl) activeEl.classList.add('active');
-                await loadChatMessages();
-                await renderChat();
+            window.deleteContact = async function(contactId) {
+                if (confirm('Удалить контакт?')) {
+                    await supabaseClient.from('contacts').delete().eq('user_id', currentUser.id).eq('contact_id', contactId);
+                    if (currentContact === contactId) { currentContact = null; document.getElementById('chatArea').innerHTML = '<div class="empty-state"><i class="fas fa-comment"></i>Выберите чат</div>'; }
+                    await loadContacts(); showNotification('Контакт удалён');
+                }
+            };
+            
+            async function loadAllUsers() {
+                let query = supabaseClient.from('users').select('*').neq('id', currentUser.id);
+                if (currentUser.invisible_mode) query = query.eq('invisible_mode', false);
+                const { data: users } = await query;
+                const container = document.getElementById('usersList');
+                if (!users?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-globe"></i>Нет пользователей</div>'; return; }
+                const { data: contacts } = await supabaseClient.from('contacts').select('contact_id').eq('user_id', currentUser.id);
+                const contactIds = new Set(contacts?.map(c => c.contact_id) || []);
+                container.innerHTML = users.map(u => `
+                    <div class="user-item">
+                        <div class="user-avatar-small" style="background: ${u.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
+                        <div class="user-info-small">
+                            <div class="contact-name">${escapeHtml(u.display_name || u.username)}</div>
+                            ${!u.hide_phone && u.phone ? `<div style="font-size:11px;"><i class="fas fa-phone"></i> ${escapeHtml(u.phone)}</div>` : ''}
+                            ${u.bio ? `<div style="font-size:10px;color:#666;"><i class="fas fa-quote-left"></i> ${escapeHtml(u.bio.substring(0, 40))}</div>` : ''}
+                        </div>
+                        ${!contactIds.has(u.id) ? `<button class="add-btn" onclick="addContact('${u.id}')"><i class="fas fa-user-plus"></i> Добавить</button>` : '<span style="color:#8dc63f;"><i class="fas fa-check"></i> в контактах</span>'}
+                    </div>
+                `).join('');
+            }
+            
+            window.addContact = async function(contactId) {
+                await supabaseClient.from('contacts').insert({ user_id: currentUser.id, contact_id: contactId });
+                showNotification('Контакт добавлен');
+                await loadContacts(); await loadAllUsers();
+                document.getElementById('searchInput').value = '';
+            };
+            
+            async function loadMyChats() {
+                const { data: memberships } = await supabaseClient.from('chat_members').select('chat_id, chats(*)').eq('user_id', currentUser.id);
+                const container = document.getElementById('chatsList');
+                if (!memberships?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-layer-group"></i>Нет групп/каналов</div>'; return; }
+                container.innerHTML = memberships.map(m => {
+                    const chat = m.chats;
+                    const typeIcon = chat.type === 'group' ? '<i class="fas fa-users"></i>' : '<i class="fas fa-broadcast-tower"></i>';
+                    return `<div class="chat-item" onclick="selectChat('${chat.id}', '${chat.type}')" data-chat-id="${chat.id}">
+                        <div class="chat-avatar" style="background: ${chat.avatar_color || '#8dc63f'}">${typeIcon}</div>
+                        <div class="chat-info">
+                            <div class="chat-name">${escapeHtml(chat.name)}</div>
+                            <div class="chat-type"><i class="fas ${chat.type === 'group' ? 'fa-users' : 'fa-broadcast-tower'}"></i> ${chat.type === 'group' ? 'Группа' : 'Канал'}</div>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+            
+            window.selectContact = async function(contactId) {
+                currentContact = contactId; currentChat = null;
+                document.querySelectorAll('.contact-item').forEach(el => el.classList.remove('active'));
+                document.querySelector(`.contact-item[data-contact-id="${contactId}"]`)?.classList.add('active');
+                await loadPrivateMessages(contactId);
+                await renderPrivateChat(contactId);
                 lastMessagesString = JSON.stringify(window.currentMessages);
             };
             
-            async function loadChatMessages() {
-                if (!currentChat) return;
-                const { data: messages } = await supabaseClient
-                    .from('messages')
-                    .select('*, users:from_user_id(username, display_name)')
-                    .eq('chat_id', currentChat)
-                    .order('created_at');
+            window.selectChat = async function(chatId, type) {
+                currentChat = chatId; currentContact = null; currentChatType = type;
+                document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+                document.querySelector(`.chat-item[data-chat-id="${chatId}"]`)?.classList.add('active');
+                await loadGroupMessages(chatId);
+                await renderGroupChat(chatId);
+                lastMessagesString = JSON.stringify(window.currentMessages);
+            };
+            
+            async function loadPrivateMessages(contactId) {
+                const { data: messages } = await supabaseClient.from('messages').select('*').or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${contactId}),and(from_user_id.eq.${contactId},to_user_id.eq.${currentUser.id})`).order('created_at');
+                window.currentMessages = messages || [];
+                await supabaseClient.from('messages').update({ is_read: true }).eq('from_user_id', contactId).eq('to_user_id', currentUser.id).eq('is_read', false);
+            }
+            
+            async function loadGroupMessages(chatId) {
+                const { data: messages } = await supabaseClient.from('messages').select('*, users:from_user_id(username, display_name)').eq('chat_id', chatId).order('created_at');
                 window.currentMessages = messages || [];
             }
             
-            async function renderChat() {
-                if (!currentChat) return;
-                const { data: chat } = await supabaseClient.from('chats').select('*').eq('id', currentChat).single();
+            async function renderPrivateChat(contactId) {
+                const { data: contact } = await supabaseClient.from('users').select('*').eq('id', contactId).single();
                 const chatArea = document.getElementById('chatArea');
                 const messages = window.currentMessages || [];
-                const typeIcon = chat.type === 'group' ? '<img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f465.png" alt="group">' : '<img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e2.png" alt="channel">';
-                
                 chatArea.innerHTML = `
                     <div class="chat-header">
-                        <div class="chat-header-avatar">${typeIcon}</div>
+                        <div class="chat-header-avatar" style="background: ${contact?.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
                         <div class="chat-header-info">
-                            <h3>${escapeHtml(chat.name)}</h3>
-                            <p><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f535.png" alt="online"> ${chat.type === 'group' ? 'Группа' : 'Канал'}</p>
+                            <h3>${escapeHtml(contact?.display_name || contact?.username)}</h3>
+                            <p><i class="fas fa-circle"></i> ${contact?.status === 'online' ? 'онлайн' : 'офлайн'}</p>
+                            ${!contact?.hide_phone && contact?.phone ? `<div class="phone"><i class="fas fa-phone"></i> ${escapeHtml(contact.phone)}</div>` : ''}
+                            ${contact?.bio ? `<div class="bio"><i class="fas fa-quote-left"></i> ${escapeHtml(contact.bio)}</div>` : ''}
                         </div>
-                        ${chat.type === 'group' ? `<div class="chat-actions"><button onclick="inviteToGroup()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e4.png" alt="invite"> Пригласить</button></div>` : ''}
+                        <div class="chat-actions">
+                            <button onclick="startCall('${contactId}', 'audio')"><i class="fas fa-phone"></i> Аудио</button>
+                            <button onclick="startCall('${contactId}', 'video')"><i class="fas fa-video"></i> Видео</button>
+                        </div>
                     </div>
                     <div class="messages-container" id="messagesContainer">
-                        ${messages.length === 0 ? '<div class="empty-state"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4ac.png" alt="chat">Нет сообщений</div>' : messages.map(msg => `
+                        ${messages.length === 0 ? '<div class="empty-state"><i class="fas fa-comment"></i>Нет сообщений</div>' : messages.map(msg => `
                             <div class="message ${msg.from_user_id === currentUser.id ? 'out' : 'in'}">
                                 <div class="message-bubble">
-                                    ${msg.from_user_id !== currentUser.id ? `<div class="message-sender"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f464.png" alt="user"> ${escapeHtml(msg.users?.display_name || msg.users?.username)}</div>` : ''}
                                     <div class="message-text">${escapeHtml(msg.content)}</div>
-                                    <div class="message-time"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f553.png" alt="time"> ${new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                                    <div class="message-time"><i class="far fa-clock"></i> ${new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
                                 </div>
                             </div>
                         `).join('')}
                     </div>
                     <div class="input-area">
-                        <input type="text" id="messageInput" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendChatMessage()">
-                        <button onclick="sendChatMessage()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e8.png" alt="send"> Отправить</button>
+                        <input type="text" id="messageInput" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendPrivateMessage()">
+                        <button onclick="sendPrivateMessage()"><i class="fas fa-paper-plane"></i> Отправить</button>
                     </div>
                 `;
                 const container = document.getElementById('messagesContainer');
                 if (container) container.scrollTop = container.scrollHeight;
             }
             
-            window.sendChatMessage = async function() {
+            async function renderGroupChat(chatId) {
+                const { data: chat } = await supabaseClient.from('chats').select('*').eq('id', chatId).single();
+                const chatArea = document.getElementById('chatArea');
+                const messages = window.currentMessages || [];
+                const typeIcon = chat.type === 'group' ? '<i class="fas fa-users"></i>' : '<i class="fas fa-broadcast-tower"></i>';
+                chatArea.innerHTML = `
+                    <div class="chat-header">
+                        <div class="chat-header-avatar" style="background: ${chat.avatar_color || '#8dc63f'}">${typeIcon}</div>
+                        <div class="chat-header-info">
+                            <h3>${escapeHtml(chat.name)}</h3>
+                            <p><i class="fas fa-circle"></i> ${chat.type === 'group' ? 'Группа' : 'Канал'}</p>
+                            ${chat.description ? `<div class="bio"><i class="fas fa-info-circle"></i> ${escapeHtml(chat.description)}</div>` : ''}
+                        </div>
+                        ${chat.type === 'group' ? `<div class="chat-actions"><button onclick="inviteToGroup()"><i class="fas fa-user-plus"></i> Пригласить</button></div>` : ''}
+                    </div>
+                    <div class="messages-container" id="messagesContainer">
+                        ${messages.length === 0 ? '<div class="empty-state"><i class="fas fa-comment"></i>Нет сообщений</div>' : messages.map(msg => `
+                            <div class="message ${msg.from_user_id === currentUser.id ? 'out' : 'in'}">
+                                <div class="message-bubble">
+                                    ${msg.from_user_id !== currentUser.id ? `<div class="message-sender"><i class="fas fa-user"></i> ${escapeHtml(msg.users?.display_name || msg.users?.username)}</div>` : ''}
+                                    <div class="message-text">${escapeHtml(msg.content)}</div>
+                                    <div class="message-time"><i class="far fa-clock"></i> ${new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="input-area">
+                        <input type="text" id="messageInput" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendGroupMessage()">
+                        <button onclick="sendGroupMessage()"><i class="fas fa-paper-plane"></i> Отправить</button>
+                    </div>
+                `;
+                const container = document.getElementById('messagesContainer');
+                if (container) container.scrollTop = container.scrollHeight;
+            }
+            
+            window.sendPrivateMessage = async function() {
+                const input = document.getElementById('messageInput');
+                const content = input.value.trim();
+                if (!content || !currentContact) return;
+                await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, to_user_id: currentContact, content });
+                input.value = '';
+                await loadPrivateMessages(currentContact);
+                await renderPrivateChat(currentContact);
+                lastMessagesString = JSON.stringify(window.currentMessages);
+            };
+            
+            window.sendGroupMessage = async function() {
                 const input = document.getElementById('messageInput');
                 const content = input.value.trim();
                 if (!content || !currentChat) return;
-                await supabaseClient.from('messages').insert({
-                    from_user_id: currentUser.id,
-                    chat_id: currentChat,
-                    content: content
-                });
+                await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, chat_id: currentChat, content });
                 input.value = '';
-                await loadChatMessages();
-                await renderChat();
+                await loadGroupMessages(currentChat);
+                await renderGroupChat(currentChat);
                 lastMessagesString = JSON.stringify(window.currentMessages);
             };
             
@@ -726,25 +820,21 @@
                 modal.className = 'modal';
                 modal.innerHTML = `
                     <div class="modal-content">
-                        <h3><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2795.png" alt="plus"> Создать чат</h3>
+                        <h3><i class="fas fa-plus-circle"></i> Создать чат</h3>
                         <select id="chatType">
-                            <option value="group"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f465.png" alt="group"> Группа (приватная)</option>
-                            <option value="channel"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e2.png" alt="channel"> Канал</option>
+                            <option value="group"><i class="fas fa-users"></i> Группа (приватная)</option>
+                            <option value="channel"><i class="fas fa-broadcast-tower"></i> Канал</option>
                         </select>
                         <div id="privacyOption" style="display:none;">
-                            <div class="checkbox-row">
-                                <input type="checkbox" id="isPrivate">
-                                <label><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f512.png" alt="lock"> Приватный канал</label>
-                            </div>
+                            <div class="checkbox-row"><input type="checkbox" id="isPrivate"><label><i class="fas fa-lock"></i> Приватный канал</label></div>
                         </div>
                         <input type="text" id="chatName" placeholder="Название">
                         <textarea id="chatDescription" rows="2" placeholder="Описание"></textarea>
-                        <button class="save-btn" onclick="createChat()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4be.png" alt="save"> Создать</button>
-                        <button class="cancel-btn" onclick="this.closest('.modal').remove()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/274c.png" alt="cancel"> Отмена</button>
+                        <button class="save-btn" onclick="createChat()"><i class="fas fa-save"></i> Создать</button>
+                        <button class="cancel-btn" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i> Отмена</button>
                     </div>
                 `;
                 document.body.appendChild(modal);
-                
                 document.getElementById('chatType').onchange = function() {
                     document.getElementById('privacyOption').style.display = this.value === 'channel' ? 'block' : 'none';
                 };
@@ -755,52 +845,151 @@
                 const name = document.getElementById('chatName').value.trim();
                 const description = document.getElementById('chatDescription').value.trim();
                 const isPrivate = type === 'channel' ? document.getElementById('isPrivate')?.checked : true;
-                
                 if (!name) { alert('Введите название'); return; }
-                
                 const { data: chat, error } = await supabaseClient.from('chats').insert({
-                    name, type, is_private: isPrivate, description,
-                    avatar_color: '#8dc63f', created_by: currentUser.id
+                    name, type, is_private: isPrivate, description, avatar_color: '#8dc63f', created_by: currentUser.id
                 }).select().single();
-                
-                if (error) { alert('Ошибка: ' + error.message); return; }
+                if (error) { alert('Ошибка'); return; }
                 document.querySelector('.modal')?.remove();
                 showNotification(`${type === 'group' ? 'Группа' : 'Канал'} "${name}" создан`);
                 await loadMyChats();
-                selectChat(chat.id);
+                if (activeTab === 'chats') switchTab('chats');
             };
             
             function startAutoUpdate() {
                 if (autoUpdateInterval) clearInterval(autoUpdateInterval);
                 autoUpdateInterval = setInterval(async () => {
-                    if (currentChat) {
-                        const { data: messages } = await supabaseClient
-                            .from('messages')
-                            .select('*')
-                            .eq('chat_id', currentChat)
-                            .order('created_at');
+                    if (currentContact) {
+                        const { data: messages } = await supabaseClient.from('messages').select('*').or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${currentContact}),and(from_user_id.eq.${currentContact},to_user_id.eq.${currentUser.id})`).order('created_at');
                         const currentString = JSON.stringify(messages);
                         if (currentString !== lastMessagesString) {
                             lastMessagesString = currentString;
                             window.currentMessages = messages || [];
-                            await renderChat();
-                            const container = document.getElementById('messagesContainer');
-                            if (container) container.scrollTop = container.scrollHeight;
+                            await renderPrivateChat(currentContact);
+                        }
+                    } else if (currentChat) {
+                        const { data: messages } = await supabaseClient.from('messages').select('*, users:from_user_id(username, display_name)').eq('chat_id', currentChat).order('created_at');
+                        const currentString = JSON.stringify(messages);
+                        if (currentString !== lastMessagesString) {
+                            lastMessagesString = currentString;
+                            window.currentMessages = messages || [];
+                            await renderGroupChat(currentChat);
                         }
                     }
                 }, 300);
             }
             
-            window.inviteToGroup = function() {
-                alert('🔜 Функция приглашения в группу будет добавлена в следующем обновлении');
+            window.searchAll = async function() {
+                const query = document.getElementById('searchInput').value.toLowerCase();
+                if (activeTab === 'users') {
+                    if (!query) { loadAllUsers(); return; }
+                    let dbQuery = supabaseClient.from('users').select('*').neq('id', currentUser.id);
+                    if (currentUser.invisible_mode) dbQuery = dbQuery.eq('invisible_mode', false);
+                    const { data: users } = await dbQuery.or(`username.ilike.%${query}%,display_name.ilike.%${query}%${!currentUser.hide_phone ? `,phone.ilike.%${query}%` : ''}`);
+                    const container = document.getElementById('usersList');
+                    if (!users?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i>Ничего не найдено</div>'; return; }
+                    const { data: contacts } = await supabaseClient.from('contacts').select('contact_id').eq('user_id', currentUser.id);
+                    const contactIds = new Set(contacts?.map(c => c.contact_id) || []);
+                    container.innerHTML = users.map(u => `
+                        <div class="user-item">
+                            <div class="user-avatar-small" style="background: ${u.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
+                            <div class="user-info-small">
+                                <div class="contact-name">${escapeHtml(u.display_name || u.username)}</div>
+                                ${!u.hide_phone && u.phone ? `<div><i class="fas fa-phone"></i> ${escapeHtml(u.phone)}</div>` : ''}
+                            </div>
+                            ${!contactIds.has(u.id) ? `<button class="add-btn" onclick="addContact('${u.id}')"><i class="fas fa-user-plus"></i> Добавить</button>` : '<span><i class="fas fa-check"></i> в контактах</span>'}
+                        </div>
+                    `).join('');
+                } else if (activeTab === 'contacts') {
+                    if (!query) { loadContacts(); return; }
+                    const { data: contacts } = await supabaseClient.from('contacts').select(`contact_id, nickname, users:contact_id(*)`).eq('user_id', currentUser.id);
+                    const filtered = contacts?.filter(c => (c.nickname || c.users.display_name || c.users.username).toLowerCase().includes(query)) || [];
+                    const container = document.getElementById('contactsList');
+                    if (!filtered.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i>Ничего не найдено</div>'; return; }
+                    container.innerHTML = filtered.map(c => {
+                        const u = c.users;
+                        return `<div class="contact-item" onclick="selectContact('${u.id}')">
+                            <div class="contact-avatar" style="background: ${u.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
+                            <div class="contact-info"><div class="contact-name">${escapeHtml(c.nickname || u.display_name || u.username)}</div></div>
+                        </div>`;
+                    }).join('');
+                } else if (activeTab === 'chats') {
+                    if (!query) { loadMyChats(); return; }
+                    const { data: memberships } = await supabaseClient.from('chat_members').select('chat_id, chats(*)').eq('user_id', currentUser.id);
+                    const filtered = memberships?.filter(m => m.chats.name.toLowerCase().includes(query)) || [];
+                    const container = document.getElementById('chatsList');
+                    if (!filtered.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i>Ничего не найдено</div>'; return; }
+                    container.innerHTML = filtered.map(m => {
+                        const chat = m.chats;
+                        const typeIcon = chat.type === 'group' ? '<i class="fas fa-users"></i>' : '<i class="fas fa-broadcast-tower"></i>';
+                        return `<div class="chat-item" onclick="selectChat('${chat.id}', '${chat.type}')">
+                            <div class="chat-avatar" style="background: ${chat.avatar_color || '#8dc63f'}">${typeIcon}</div>
+                            <div class="chat-info"><div class="chat-name">${escapeHtml(chat.name)}</div></div>
+                        </div>`;
+                    }).join('');
+                }
             };
             
-            window.openSettings = function() { alert('⚙️ Настройки профиля в разработке'); };
+            window.switchTab = function(tab) {
+                activeTab = tab;
+                document.getElementById('contactsList').style.display = tab === 'contacts' ? 'block' : 'none';
+                document.getElementById('usersList').style.display = tab === 'users' ? 'block' : 'none';
+                document.getElementById('chatsList').style.display = tab === 'chats' ? 'block' : 'none';
+                document.querySelectorAll('.tab').forEach((t, i) => {
+                    t.classList.remove('active');
+                    if ((tab === 'contacts' && i === 0) || (tab === 'users' && i === 1) || (tab === 'chats' && i === 2)) t.classList.add('active');
+                });
+                if (tab === 'users') loadAllUsers();
+                if (tab === 'chats') loadMyChats();
+                document.getElementById('searchInput').value = '';
+            };
+            
+            window.openSettings = function() {
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h3><i class="fas fa-cog"></i> Настройки профиля</h3>
+                        <input type="text" id="settingsDisplayName" placeholder="Отображаемое имя" value="${escapeHtml(currentUser.display_name || '')}">
+                        <textarea id="settingsBio" rows="3" placeholder="О себе">${escapeHtml(currentUser.bio || '')}</textarea>
+                        <div class="phone-row">
+                            <select id="settingsCountryCode"><option value="+7">+7</option><option value="+1">+1</option><option value="+44">+44</option></select>
+                            <input type="tel" id="settingsPhone" placeholder="Номер" value="${currentUser.phone ? currentUser.phone.replace(/^\+?\d+/, '') : ''}">
+                        </div>
+                        <div class="checkbox-row"><input type="checkbox" id="settingsHidePhone" ${currentUser.hide_phone ? 'checked' : ''}><label><i class="fas fa-eye-slash"></i> Скрыть номер</label></div>
+                        <div class="checkbox-row"><input type="checkbox" id="settingsInvisibleMode" ${currentUser.invisible_mode ? 'checked' : ''}><label><i class="fas fa-user-secret"></i> Невидимый режим</label></div>
+                        <button class="save-btn" onclick="saveSettings()"><i class="fas fa-save"></i> Сохранить</button>
+                        <button class="cancel-btn" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i> Отмена</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            };
+            
+            window.saveSettings = async function() {
+                const displayName = document.getElementById('settingsDisplayName').value.trim();
+                const bio = document.getElementById('settingsBio').value.trim();
+                const phoneNumber = document.getElementById('settingsPhone').value.trim();
+                const hidePhone = document.getElementById('settingsHidePhone').checked;
+                const invisibleMode = document.getElementById('settingsInvisibleMode').checked;
+                if (!displayName) { alert('Введите имя'); return; }
+                const { error } = await supabaseClient.from('users').update({
+                    display_name: displayName, bio, hide_phone: hidePhone, invisible_mode: invisibleMode
+                }).eq('id', currentUser.id);
+                if (error) { alert('Ошибка'); return; }
+                currentUser.display_name = displayName; currentUser.bio = bio; currentUser.hide_phone = hidePhone; currentUser.invisible_mode = invisibleMode;
+                saveSession(currentUser);
+                document.querySelector('.modal')?.remove();
+                await loadMainScreen();
+                showNotification('Профиль обновлён');
+            };
+            
+            window.inviteToGroup = function() { alert('🔜 Функция приглашения в разработке'); };
+            window.startCall = function(contactId, type) { alert(`🔔 ${type === 'audio' ? 'Аудиозвонок' : 'Видеозвонок'} (в разработке)`); };
             
             window.logout = async function() {
                 if (currentUser) await supabaseClient.from('users').update({ status: 'offline' }).eq('id', currentUser.id);
                 if (autoUpdateInterval) clearInterval(autoUpdateInterval);
-                clearSession(); currentUser = null; currentChat = null;
+                clearSession(); currentUser = null; currentContact = null; currentChat = null;
                 showAuth();
             };
             
