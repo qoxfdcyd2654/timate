@@ -425,10 +425,6 @@
             const SUPABASE_URL = 'https://eiqtdlzsupmaaycwvjhp.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpcXRkbHpzdXBtYWF5Y3d2amhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MjgxOTAsImV4cCI6MjA5MDIwNDE5MH0.IHU21Y-pzzWEOQGU28UanSI0nrjGgstc45HWDRyGuIg';
             
-            // Gemini API
-            const GEMINI_API_KEY = 'AIzaSyDGSiZNwy_RcOJGC_2RGPuxzn_KooymUUE';
-            const GEMINI_CHAT_ID = 'd02fc245-4556-4cd5-a9be-3c977f6f8dd0';
-            
             const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
             let currentUser = null;
@@ -437,81 +433,49 @@
             let currentChatType = null;
             let autoUpdateInterval = null;
             let lastMessagesString = '';
+            let lastMessagesMap = new Map(); // Храним последнюю строку сообщений для каждого чата
             let privacyAccepted = localStorage.getItem('privacy_accepted') === 'true';
             let activeTab = 'contacts';
             let isMainScreenLoaded = false;
+            let notificationsEnabled = false;
             
-            // Функция для вызова Gemini API
-// Замени функцию callGemini на эту:
-async function callGemini(prompt) {
-    try {
-        // Используем CORS-прокси для обхода блокировок
-        const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
-        
-        const response = await fetch(proxyUrl + apiUrl, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Origin': window.location.origin
-            },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        
-        const data = await response.json();
-        if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-            return data.candidates[0].content.parts[0].text;
-        }
-        return 'Извините, не могу ответить на этот вопрос.';
-    } catch (error) {
-        console.error('Gemini API error:', error);
-        return '❌ Ошибка связи с нейросетью. Возможно, API временно недоступен в вашем регионе. Попробуйте позже или используйте VPN.';
-    }
-}
-            
-            // Создаём канал с нейросетью если его нет
-            async function createGeminiChannelIfNotExists() {
-                const { data: existing } = await supabaseClient
-                    .from('chats')
-                    .select('*')
-                    .eq('id', GEMINI_CHAT_ID)
-                    .single();
-                
-                if (!existing) {
-                    const { error } = await supabaseClient.from('chats').insert({
-                        id: GEMINI_CHAT_ID,
-                        name: 'Gemini AI',
-                        type: 'channel',
-                        is_private: false,
-                        description: 'Нейросеть Gemini от Google. Задавайте любые вопросы!',
-                        avatar_color: '#4285f4',
-                        created_by: currentUser?.id || '00000000-0000-0000-0000-000000000000'
-                    });
-                    if (error) console.error('Error creating Gemini channel:', error);
+            // Запрашиваем разрешение на уведомления
+            async function requestNotificationPermission() {
+                if (!('Notification' in window)) {
+                    console.log('Браузер не поддерживает уведомления');
+                    return;
+                }
+                if (Notification.permission === 'granted') {
+                    notificationsEnabled = true;
+                } else if (Notification.permission !== 'denied') {
+                    const permission = await Notification.requestPermission();
+                    notificationsEnabled = permission === 'granted';
+                    if (notificationsEnabled) {
+                        showNotification('🔔 Уведомления включены');
+                    }
                 }
             }
             
-            // Функция для добавления пользователя в канал Gemini
-            async function addUserToGeminiChannel() {
-                const { data: existing } = await supabaseClient
-                    .from('chat_members')
-                    .select('*')
-                    .eq('chat_id', GEMINI_CHAT_ID)
-                    .eq('user_id', currentUser.id)
-                    .single();
+            // Отправка push-уведомления
+            function sendPushNotification(title, body, icon = null) {
+                if (!notificationsEnabled) return;
+                if (document.hasFocus()) return; // Не показываем уведомления если страница активна
                 
-                if (!existing) {
-                    await supabaseClient.from('chat_members').insert({
-                        chat_id: GEMINI_CHAT_ID,
-                        user_id: currentUser.id,
-                        role: 'member'
+                try {
+                    const notification = new Notification(title, {
+                        body: body,
+                        icon: icon || 'https://eiqtdlzsupmaaycwvjhp.supabase.co/storage/v1/object/public/avatars/timate-icon.png',
+                        silent: false
                     });
+                    
+                    notification.onclick = function() {
+                        window.focus();
+                        notification.close();
+                    };
+                    
+                    setTimeout(() => notification.close(), 5000);
+                } catch (e) {
+                    console.error('Ошибка уведомления:', e);
                 }
             }
             
@@ -522,7 +486,7 @@ async function callGemini(prompt) {
                     if (user.id) {
                         currentUser = user;
                         supabaseClient.from('users').update({ status: 'online' }).eq('id', currentUser.id);
-                        createGeminiChannelIfNotExists().then(() => addUserToGeminiChannel());
+                        requestNotificationPermission();
                         loadMainScreen();
                     } else { showAuth(); }
                 } catch(e) { showAuth(); }
@@ -610,8 +574,7 @@ async function callGemini(prompt) {
                 currentUser = user;
                 saveSession(currentUser);
                 await supabaseClient.from('users').update({ status: 'online' }).eq('id', currentUser.id);
-                await createGeminiChannelIfNotExists();
-                await addUserToGeminiChannel();
+                await requestNotificationPermission();
                 await loadMainScreen();
             };
             
@@ -665,12 +628,10 @@ async function callGemini(prompt) {
                 }).select().single();
                 if (error) { document.getElementById('regError').textContent = '❌ Ошибка'; return; }
                 currentUser = newUser; saveSession(currentUser);
-                await createGeminiChannelIfNotExists();
-                await addUserToGeminiChannel();
+                await requestNotificationPermission();
                 await loadMainScreen();
             };
             
-            // Функция загрузки аватарки
             async function uploadAvatar(file) {
                 if (!file) return;
                 const fileName = `${currentUser.id}_${Date.now()}.png`;
@@ -891,7 +852,8 @@ async function callGemini(prompt) {
                 if (activeEl) activeEl.classList.add('active');
                 await loadPrivateMessages(contactId);
                 await renderPrivateChat(contactId);
-                lastMessagesString = JSON.stringify(window.currentMessages);
+                const messagesKey = `private_${contactId}`;
+                lastMessagesMap.set(messagesKey, JSON.stringify(window.currentMessages));
             };
             
             window.selectChat = async function(chatId, type) {
@@ -903,7 +865,8 @@ async function callGemini(prompt) {
                 if (activeEl) activeEl.classList.add('active');
                 await loadGroupMessages(chatId);
                 await renderGroupChat(chatId);
-                lastMessagesString = JSON.stringify(window.currentMessages);
+                const messagesKey = `group_${chatId}`;
+                lastMessagesMap.set(messagesKey, JSON.stringify(window.currentMessages));
             };
             
             async function loadPrivateMessages(contactId) {
@@ -961,14 +924,11 @@ async function callGemini(prompt) {
                 const messages = window.currentMessages || [];
                 const typeIcon = chat.type === 'group' ? '<i class="fas fa-users"></i>' : '<i class="fas fa-broadcast-tower"></i>';
                 
-                // Специальная обработка для канала Gemini
-                const isGeminiChannel = chat.id === GEMINI_CHAT_ID;
-                
                 chatArea.innerHTML = `
                     <div class="chat-header">
                         <div class="chat-header-avatar" style="background: ${chat.avatar_color || '#8dc63f'}">${typeIcon}</div>
                         <div class="chat-header-info">
-                            <h3>${escapeHtml(chat.name)} ${isGeminiChannel ? '<span style="font-size:12px;color:#4285f4;">🤖 AI</span>' : ''}</h3>
+                            <h3>${escapeHtml(chat.name)}</h3>
                             <p><i class="fas fa-circle"></i> ${chat.type === 'group' ? 'Группа' : (chat.is_private ? 'Приватный канал' : 'Публичный канал')}</p>
                             ${chat.description ? `<div class="bio"><i class="fas fa-info-circle"></i> ${escapeHtml(chat.description)}</div>` : ''}
                         </div>
@@ -988,7 +948,7 @@ async function callGemini(prompt) {
                         `).join('')}
                     </div>
                     <div class="input-area">
-                        <input type="text" id="messageInput" placeholder="${isGeminiChannel ? 'Задайте вопрос нейросети Gemini...' : 'Сообщение...'}" onkeypress="if(event.key==='Enter') sendGroupMessage()">
+                        <input type="text" id="messageInput" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendGroupMessage()">
                         <button onclick="sendGroupMessage()"><i class="fas fa-paper-plane"></i> Отправить</button>
                     </div>
                 `;
@@ -1004,26 +964,27 @@ async function callGemini(prompt) {
                 input.value = '';
                 await loadPrivateMessages(currentContact);
                 await renderPrivateChat(currentContact);
-                lastMessagesString = JSON.stringify(window.currentMessages);
+                const messagesKey = `private_${currentContact}`;
+                lastMessagesMap.set(messagesKey, JSON.stringify(window.currentMessages));
             };
             
-window.sendGroupMessage = async function() {
-    const input = document.getElementById('messageInput');
-    const content = input.value.trim();
-    if (!content || !currentChat) return;
-    
-    // Сохраняем сообщение пользователя
-    await supabaseClient.from('messages').insert({ 
-        from_user_id: currentUser.id, 
-        chat_id: currentChat, 
-        content: content 
-    });
-    
-    input.value = '';
-    await loadGroupMessages(currentChat);
-    await renderGroupChat(currentChat);
-    lastMessagesString = JSON.stringify(window.currentMessages);
-};
+            window.sendGroupMessage = async function() {
+                const input = document.getElementById('messageInput');
+                const content = input.value.trim();
+                if (!content || !currentChat) return;
+                
+                await supabaseClient.from('messages').insert({ 
+                    from_user_id: currentUser.id, 
+                    chat_id: currentChat, 
+                    content: content 
+                });
+                
+                input.value = '';
+                await loadGroupMessages(currentChat);
+                await renderGroupChat(currentChat);
+                const messagesKey = `group_${currentChat}`;
+                lastMessagesMap.set(messagesKey, JSON.stringify(window.currentMessages));
+            };
             
             window.inviteToChannelModal = function(chatId) {
                 const username = prompt('Введите имя пользователя для приглашения:');
@@ -1094,16 +1055,52 @@ window.sendGroupMessage = async function() {
                     if (currentContact) {
                         const { data: messages } = await supabaseClient.from('messages').select('*').or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${currentContact}),and(from_user_id.eq.${currentContact},to_user_id.eq.${currentUser.id})`).order('created_at');
                         const currentString = JSON.stringify(messages);
-                        if (currentString !== lastMessagesString) {
-                            lastMessagesString = currentString;
+                        const messagesKey = `private_${currentContact}`;
+                        const lastString = lastMessagesMap.get(messagesKey) || '';
+                        
+                        if (currentString !== lastString) {
+                            // Нашли новое сообщение!
+                            lastMessagesMap.set(messagesKey, currentString);
+                            
+                            // Находим новое сообщение (последнее в списке)
+                            const newMessages = messages || [];
+                            const oldMessages = lastString ? JSON.parse(lastString) : [];
+                            
+                            if (newMessages.length > oldMessages.length) {
+                                const lastMessage = newMessages[newMessages.length - 1];
+                                // Проверяем, что сообщение не от текущего пользователя
+                                if (lastMessage && lastMessage.from_user_id !== currentUser.id) {
+                                    // Получаем имя отправителя
+                                    const { data: sender } = await supabaseClient.from('users').select('display_name, username').eq('id', lastMessage.from_user_id).single();
+                                    const senderName = sender?.display_name || sender?.username || 'Пользователь';
+                                    sendPushNotification(`💬 Новое сообщение от ${senderName}`, lastMessage.content.substring(0, 100));
+                                }
+                            }
+                            
                             window.currentMessages = messages || [];
                             await renderPrivateChat(currentContact);
                         }
                     } else if (currentChat) {
                         const { data: messages } = await supabaseClient.from('messages').select('*, users:from_user_id(username, display_name)').eq('chat_id', currentChat).order('created_at');
                         const currentString = JSON.stringify(messages);
-                        if (currentString !== lastMessagesString) {
-                            lastMessagesString = currentString;
+                        const messagesKey = `group_${currentChat}`;
+                        const lastString = lastMessagesMap.get(messagesKey) || '';
+                        
+                        if (currentString !== lastString) {
+                            lastMessagesMap.set(messagesKey, currentString);
+                            
+                            const newMessages = messages || [];
+                            const oldMessages = lastString ? JSON.parse(lastString) : [];
+                            
+                            if (newMessages.length > oldMessages.length) {
+                                const lastMessage = newMessages[newMessages.length - 1];
+                                if (lastMessage && lastMessage.from_user_id !== currentUser.id) {
+                                    const senderName = lastMessage.users?.display_name || lastMessage.users?.username || 'Пользователь';
+                                    const chatName = window.currentChatName || 'Чат';
+                                    sendPushNotification(`💬 Новое сообщение в ${chatName} от ${senderName}`, lastMessage.content.substring(0, 100));
+                                }
+                            }
+                            
                             window.currentMessages = messages || [];
                             await renderGroupChat(currentChat);
                         }
@@ -1224,6 +1221,7 @@ window.sendGroupMessage = async function() {
                         </div>
                         <div class="checkbox-row"><input type="checkbox" id="settingsHidePhone" ${currentUser.hide_phone ? 'checked' : ''}><label><i class="fas fa-eye-slash"></i> Скрыть номер</label></div>
                         <div class="checkbox-row"><input type="checkbox" id="settingsInvisibleMode" ${currentUser.invisible_mode ? 'checked' : ''}><label><i class="fas fa-user-secret"></i> Невидимый режим</label></div>
+                        <div class="checkbox-row"><input type="checkbox" id="settingsNotifications" ${notificationsEnabled ? 'checked' : ''}><label><i class="fas fa-bell"></i> Включить уведомления</label></div>
                         <button class="save-btn" onclick="saveSettings()"><i class="fas fa-save"></i> Сохранить</button>
                         <button class="cancel-btn" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i> Отмена</button>
                     </div>
@@ -1237,16 +1235,28 @@ window.sendGroupMessage = async function() {
                 const phoneNumber = document.getElementById('settingsPhone').value.trim();
                 const hidePhone = document.getElementById('settingsHidePhone').checked;
                 const invisibleMode = document.getElementById('settingsInvisibleMode').checked;
+                const enableNotifications = document.getElementById('settingsNotifications').checked;
+                
                 if (!displayName) { alert('Введите имя'); return; }
+                
                 const { error } = await supabaseClient.from('users').update({
                     display_name: displayName, bio, hide_phone: hidePhone, invisible_mode: invisibleMode
                 }).eq('id', currentUser.id);
+                
                 if (error) { alert('Ошибка'); return; }
+                
                 currentUser.display_name = displayName; 
                 currentUser.bio = bio; 
                 currentUser.hide_phone = hidePhone; 
                 currentUser.invisible_mode = invisibleMode;
                 saveSession(currentUser);
+                
+                if (enableNotifications && !notificationsEnabled) {
+                    await requestNotificationPermission();
+                } else if (!enableNotifications && notificationsEnabled) {
+                    notificationsEnabled = false;
+                }
+                
                 document.querySelector('.modal')?.remove();
                 await loadMainScreen();
                 showNotification('Профиль обновлён');
