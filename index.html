@@ -39,6 +39,7 @@
             text-align: center;
         }
         .sidebar-header h2 { color: white; font-size: 26px; }
+        .sidebar-header h2 img { width: 28px; height: 28px; vertical-align: middle; margin-right: 8px; }
         .sidebar-header p { color: rgba(255,255,255,0.8); font-size: 12px; }
         .current-user {
             padding: 15px;
@@ -47,7 +48,6 @@
             align-items: center;
             gap: 12px;
             border-bottom: 1px solid #eee;
-            position: relative;
         }
         .user-avatar {
             width: 48px;
@@ -64,22 +64,30 @@
         .user-info { flex: 1; }
         .user-name { font-weight: bold; color: #2c3e50; }
         .user-status { font-size: 12px; color: #2ecc71; }
-        .user-phone { font-size: 10px; color: #999; margin-top: 2px; }
-        .user-bio { font-size: 11px; color: #666; margin-top: 2px; font-style: italic; }
+        .user-status img { width: 10px; height: 10px; vertical-align: middle; margin-right: 4px; }
         .settings-btn, .logout-btn {
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 20px;
             padding: 8px;
             border-radius: 50%;
             transition: background 0.2s;
         }
+        .settings-btn img, .logout-btn img { width: 20px; height: 20px; vertical-align: middle; }
         .settings-btn:hover, .logout-btn:hover { background: #f0f0f0; }
-        .search-box { padding: 15px; border-bottom: 1px solid #eee; }
+        .search-box { padding: 15px; border-bottom: 1px solid #eee; position: relative; }
+        .search-box img {
+            position: absolute;
+            left: 28px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            opacity: 0.6;
+        }
         .search-box input {
             width: 100%;
-            padding: 10px 12px;
+            padding: 10px 12px 10px 38px;
             border: 1px solid #e0e0e0;
             border-radius: 20px;
             outline: none;
@@ -98,75 +106,61 @@
             cursor: pointer;
             font-size: 14px;
             color: #666;
+            transition: all 0.2s;
         }
+        .tab img { width: 18px; height: 18px; vertical-align: middle; margin-right: 6px; }
         .tab.active {
             background: white;
             color: #9b59b6;
             border-bottom: 2px solid #9b59b6;
         }
-        .contacts-list, .users-list {
+        .chats-list {
             flex: 1;
             overflow-y: auto;
             background: white;
         }
-        .contact-item, .user-item {
+        .chat-item {
             padding: 12px 15px;
             display: flex;
             align-items: center;
             gap: 12px;
             cursor: pointer;
             border-bottom: 1px solid #f5f5f5;
-            position: relative;
+            transition: background 0.2s;
         }
-        .contact-item:hover, .user-item:hover { background: #f8f9fa; }
-        .contact-item.active {
+        .chat-item:hover { background: #f8f9fa; }
+        .chat-item.active {
             background: #f3e5f5;
             border-left: 3px solid #9b59b6;
         }
-        .contact-avatar, .user-avatar-small {
+        .chat-avatar {
             width: 44px;
             height: 44px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 18px;
+            background: #8dc63f;
+            font-size: 20px;
             flex-shrink: 0;
         }
-        .contact-info, .user-info-small { flex: 1; }
-        .contact-name { font-weight: 600; color: #2c3e50; }
-        .contact-status { font-size: 11px; }
-        .contact-status.online { color: #2ecc71; }
-        .contact-status.offline { color: #999; }
-        .contact-phone { font-size: 10px; color: #8dc63f; margin-top: 2px; }
-        .contact-bio { font-size: 10px; color: #666; margin-top: 2px; }
-        .call-buttons, .contact-actions {
-            display: flex;
-            gap: 8px;
-            margin-left: auto;
-        }
-        .call-btn, .delete-contact-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 18px;
-            padding: 6px;
-            border-radius: 50%;
-            transition: background 0.2s;
-        }
-        .call-btn:hover, .delete-contact-btn:hover { background: #f0f0f0; }
-        .delete-contact-btn { color: #e74c3c; }
-        .add-btn {
+        .chat-avatar img { width: 24px; height: 24px; }
+        .chat-info { flex: 1; }
+        .chat-name { font-weight: 600; color: #2c3e50; }
+        .chat-type { font-size: 10px; color: #8dc63f; margin-top: 2px; }
+        .create-chat-btn {
+            margin: 10px;
+            padding: 10px;
             background: #9b59b6;
             color: white;
             border: none;
-            padding: 6px 14px;
             border-radius: 20px;
             cursor: pointer;
-            font-size: 12px;
+            font-weight: 600;
+            transition: transform 0.1s;
         }
+        .create-chat-btn img { width: 16px; height: 16px; vertical-align: middle; margin-right: 8px; filter: brightness(0) invert(1); }
+        .create-chat-btn:hover { transform: scale(1.02); }
         .chat-area {
             flex: 1;
             display: flex;
@@ -188,24 +182,24 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 20px;
+            background: #8dc63f;
         }
+        .chat-header-avatar img { width: 28px; height: 28px; }
         .chat-header-info { flex: 1; }
         .chat-header-info h3 { color: #2c3e50; font-size: 18px; }
         .chat-header-info p { font-size: 12px; color: #2ecc71; }
-        .chat-header-info .phone { font-size: 10px; color: #8dc63f; }
-        .chat-header-info .bio { font-size: 11px; color: #666; margin-top: 4px; }
-        .call-controls { display: flex; gap: 10px; margin-left: auto; }
-        .call-controls button {
+        .chat-header-info p img { width: 10px; height: 10px; vertical-align: middle; margin-right: 4px; }
+        .chat-actions button {
             background: #9b59b6;
             color: white;
             border: none;
             padding: 8px 16px;
             border-radius: 20px;
             cursor: pointer;
+            transition: transform 0.1s;
         }
+        .chat-actions button img { width: 14px; height: 14px; vertical-align: middle; margin-right: 6px; filter: brightness(0) invert(1); }
+        .chat-actions button:hover { transform: scale(1.02); }
         .messages-container {
             flex: 1;
             padding: 20px;
@@ -233,8 +227,16 @@
             color: white;
             border-bottom-right-radius: 4px;
         }
+        .message-sender {
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 4px;
+            opacity: 0.8;
+        }
+        .message-sender img { width: 12px; height: 12px; vertical-align: middle; margin-right: 4px; }
         .message-text { word-wrap: break-word; font-size: 14px; }
         .message-time { font-size: 10px; margin-top: 5px; opacity: 0.7; text-align: right; }
+        .message-time img { width: 10px; height: 10px; vertical-align: middle; margin-right: 4px; }
         .input-area {
             padding: 15px 20px;
             background: white;
@@ -259,49 +261,10 @@
             border-radius: 25px;
             cursor: pointer;
             font-weight: 600;
+            transition: transform 0.1s;
         }
-        .login-screen {
-            width: 450px;
-            background: rgba(255,255,255,0.98);
-            border-radius: 28px;
-            padding: 40px;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        }
-        .login-screen h1 { color: #8dc63f; margin-bottom: 8px; font-size: 32px; }
-        .login-screen p { color: #666; margin-bottom: 25px; }
-        .login-screen input, .login-screen select, .login-screen textarea {
-            width: 100%;
-            padding: 12px 15px;
-            margin: 10px 0;
-            border: 2px solid #e0e0e0;
-            border-radius: 25px;
-            outline: none;
-            font-size: 14px;
-            transition: all 0.2s;
-            font-family: inherit;
-        }
-        .login-screen input:focus, .login-screen select:focus, .login-screen textarea:focus { border-color: #9b59b6; }
-        .login-screen input.error, .login-screen select.error { border-color: #e74c3c; background-color: #fff5f5; }
-        .phone-row { display: flex; gap: 10px; margin: 10px 0; }
-        .phone-row select { width: 35%; margin: 0; }
-        .phone-row input { width: 65%; margin: 0; }
-        .login-screen button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 15px;
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 16px;
-        }
-        .switch-mode { margin-top: 15px; color: #9b59b6; cursor: pointer; font-size: 14px; }
-        .switch-mode:hover { text-decoration: underline; }
-        .error { color: #e74c3c; font-size: 12px; margin-top: 12px; }
-        .empty-state { text-align: center; padding: 30px; color: #999; }
+        .input-area button img { width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; filter: brightness(0) invert(1); }
+        .input-area button:hover { transform: scale(1.02); }
         .modal {
             position: fixed;
             top: 0;
@@ -318,11 +281,15 @@
             background: white;
             border-radius: 24px;
             padding: 30px;
-            width: 450px;
+            width: 500px;
             max-width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
         }
         .modal-content h3 { margin-bottom: 20px; color: #8dc63f; }
-        .modal-content input, .modal-content textarea {
+        .modal-content h3 img { width: 24px; height: 24px; vertical-align: middle; margin-right: 8px; }
+        .modal-content h4 { margin: 15px 0 10px; color: #9b59b6; }
+        .modal-content input, .modal-content select, .modal-content textarea {
             width: 100%;
             padding: 12px;
             margin: 10px 0;
@@ -336,16 +303,21 @@
             gap: 10px;
             margin: 15px 0;
         }
-        .modal-content .checkbox-row input { width: auto; margin: 0; }
+        .modal-content .checkbox-row img { width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; }
         .modal-content button {
             padding: 10px 20px;
             margin: 10px 5px;
             border: none;
             border-radius: 20px;
             cursor: pointer;
+            transition: transform 0.1s;
         }
+        .modal-content button img { width: 14px; height: 14px; vertical-align: middle; margin-right: 6px; }
         .save-btn { background: #8dc63f; color: white; }
         .cancel-btn { background: #e74c3c; color: white; }
+        .accept-btn { background: #9b59b6; color: white; }
+        .empty-state { text-align: center; padding: 30px; color: #999; }
+        .empty-state img { width: 48px; height: 48px; margin-bottom: 15px; opacity: 0.5; }
         .notification {
             position: fixed;
             bottom: 20px;
@@ -357,11 +329,56 @@
             z-index: 1000;
             animation: fadeOut 3s forwards;
         }
+        .notification img { width: 16px; height: 16px; vertical-align: middle; margin-right: 8px; filter: brightness(0) invert(1); }
         @keyframes fadeOut {
             0% { opacity: 1; }
             70% { opacity: 1; }
             100% { opacity: 0; visibility: hidden; }
         }
+        .login-screen {
+            width: 450px;
+            background: rgba(255,255,255,0.98);
+            border-radius: 28px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .login-screen h1 { color: #8dc63f; margin-bottom: 8px; font-size: 32px; }
+        .login-screen h1 img { width: 36px; height: 36px; vertical-align: middle; margin-right: 10px; }
+        .login-screen input, .login-screen select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #e0e0e0;
+            border-radius: 25px;
+            outline: none;
+        }
+        .phone-row { display: flex; gap: 10px; margin: 10px 0; }
+        .phone-row select { width: 35%; margin: 0; }
+        .phone-row input { width: 65%; margin: 0; }
+        .login-screen button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .login-screen button img { width: 16px; height: 16px; vertical-align: middle; margin-right: 8px; filter: brightness(0) invert(1); }
+        .login-screen button:hover { transform: scale(1.02); }
+        .switch-mode { margin-top: 15px; color: #9b59b6; cursor: pointer; font-size: 14px; }
+        .privacy-link {
+            font-size: 12px;
+            color: #999;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+        .privacy-link img { width: 14px; height: 14px; vertical-align: middle; margin-right: 4px; }
+        .privacy-link span { color: #9b59b6; text-decoration: underline; }
+        .error { color: #e74c3c; font-size: 12px; margin-top: 10px; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -376,29 +393,10 @@
             const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
             let currentUser = null;
-            let currentContact = null;
-            let messagesSubscription = null;
-            let isLoginMode = true;
+            let currentChat = null;
             let autoUpdateInterval = null;
             let lastMessagesString = '';
-            
-            const countries = [
-                { code: "+7", name: "🇷🇺 Россия" },
-                { code: "+1", name: "🇺🇸 США/Канада" },
-                { code: "+44", name: "🇬🇧 Великобритания" },
-                { code: "+49", name: "🇩🇪 Германия" },
-                { code: "+33", name: "🇫🇷 Франция" },
-                { code: "+34", name: "🇪🇸 Испания" },
-                { code: "+39", name: "🇮🇹 Италия" },
-                { code: "+86", name: "🇨🇳 Китай" },
-                { code: "+81", name: "🇯🇵 Япония" },
-                { code: "+82", name: "🇰🇷 Корея" },
-                { code: "+55", name: "🇧🇷 Бразилия" },
-                { code: "+91", name: "🇮🇳 Индия" },
-                { code: "+61", name: "🇦🇺 Австралия" },
-                { code: "+380", name: "🇺🇦 Украина" },
-                { code: "+375", name: "🇧🇾 Беларусь" }
-            ];
+            let privacyAccepted = localStorage.getItem('privacy_accepted') === 'true';
             
             const savedUser = localStorage.getItem('timate_user');
             if (savedUser) {
@@ -406,7 +404,7 @@
                     const user = JSON.parse(savedUser);
                     if (user.id) {
                         currentUser = user;
-                        supabaseClient.from('users').update({ status: 'online', last_seen: new Date().toISOString() }).eq('id', currentUser.id);
+                        supabaseClient.from('users').update({ status: 'online' }).eq('id', currentUser.id);
                         loadMainScreen();
                     } else { showAuth(); }
                 } catch(e) { showAuth(); }
@@ -414,89 +412,186 @@
             
             function saveSession(user) { localStorage.setItem('timate_user', JSON.stringify(user)); }
             function clearSession() { localStorage.removeItem('timate_user'); }
-            
             function showNotification(msg) {
                 const notif = document.createElement('div');
                 notif.className = 'notification';
-                notif.textContent = msg;
+                notif.innerHTML = `<img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f514.png" alt="bell"> ${msg}`;
                 document.body.appendChild(notif);
                 setTimeout(() => notif.remove(), 3000);
             }
             
+            function showPrivacyPolicy() {
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h3><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f6e1.png" alt="shield"> Политика конфиденциальности Timate</h3>
+                        <p><strong>Дата вступления в силу:</strong> 28 марта 2026 г.</p>
+                        
+                        <h4>1. Какие данные мы собираем</h4>
+                        <p>• Имя пользователя и отображаемое имя<br>• Номер телефона (для входа)<br>• Пароль (хранится в зашифрованном виде)<br>• Сообщения и история чатов<br>• Аватар (если загрузите)</p>
+                        
+                        <h4>2. Как мы используем данные</h4>
+                        <p>• Для обеспечения работы мессенджера<br>• Для идентификации пользователей<br>• Для доставки сообщений</p>
+                        
+                        <h4>3. Передача данных третьим лицам</h4>
+                        <p><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/274c.png" alt="no"> Мы НЕ передаём ваши данные третьим лицам.<br>
+                        <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2705.png" alt="yes"> Все данные хранятся в Supabase (облачный сервис).</p>
+                        
+                        <h4>4. Безопасность</h4>
+                        <p>Мы не несём ответственности за взлом вашего аккаунта, если вы передали пароль кому-то ещё. Храните пароль в тайне!</p>
+                        
+                        <h4>5. Удаление данных</h4>
+                        <p>Вы можете удалить свой аккаунт, написав в поддержку. Все ваши сообщения будут удалены.</p>
+                        
+                        <h4>6. Контакты</h4>
+                        <p>По вопросам: <a href="https://t.me/TimateBot" target="_blank">@TimateBot</a></p>
+                        
+                        <hr>
+                        <div class="checkbox-row">
+                            <input type="checkbox" id="acceptPrivacy" ${privacyAccepted ? 'checked' : ''}>
+                            <label><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2705.png" alt="check"> Я принимаю условия Политики конфиденциальности</label>
+                        </div>
+                        <button class="accept-btn" onclick="window.acceptPrivacy()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2714.png" alt="ok"> Принять и продолжить</button>
+                        <button class="cancel-btn" onclick="this.closest('.modal').remove()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/274c.png" alt="close"> Закрыть</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+            
+            window.acceptPrivacy = function() {
+                const checkbox = document.getElementById('acceptPrivacy');
+                if (!checkbox.checked) {
+                    alert('Пожалуйста, примите условия Политики конфиденциальности');
+                    return;
+                }
+                privacyAccepted = true;
+                localStorage.setItem('privacy_accepted', 'true');
+                document.querySelector('.modal')?.remove();
+                showNotification('Вы приняли условия использования');
+            };
+            
             async function showAuth() {
-                const countryOptions = countries.map(c => `<option value="${c.code}">${c.name} (${c.code})</option>`).join('');
                 document.getElementById('app').innerHTML = `
                     <div class="login-screen">
-                        <h1>💚 Timate</h1>
-                        <p>${isLoginMode ? 'вход по номеру телефона' : 'регистрация'}</p>
-                        ${!isLoginMode ? `
-                            <input type="text" id="authUsername" placeholder="Имя пользователя">
-                            <input type="text" id="authDisplayName" placeholder="Отображаемое имя">
-                            <textarea id="authBio" rows="2" placeholder="О себе (необязательно)"></textarea>
-                        ` : ''}
+                        <h1><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4ac.png" alt="chat"> Timate</h1>
+                        <p>вход по номеру телефона</p>
                         <div class="phone-row">
-                            <select id="authCountryCode">${countryOptions}</select>
+                            <select id="authCountryCode">
+                                <option value="+7">🇷🇺 Россия (+7)</option>
+                                <option value="+1">🇺🇸 США (+1)</option>
+                                <option value="+44">🇬🇧 Великобритания (+44)</option>
+                                <option value="+49">🇩🇪 Германия (+49)</option>
+                                <option value="+33">🇫🇷 Франция (+33)</option>
+                                <option value="+86">🇨🇳 Китай (+86)</option>
+                                <option value="+380">🇺🇦 Украина (+380)</option>
+                                <option value="+375">🇧🇾 Беларусь (+375)</option>
+                            </select>
                             <input type="tel" id="authPhone" placeholder="Номер телефона">
                         </div>
                         <input type="password" id="authPassword" placeholder="Пароль">
-                        ${!isLoginMode ? `<input type="password" id="authConfirmPassword" placeholder="Повторите пароль">` : ''}
-                        <button onclick="window.submitAuth()">${isLoginMode ? 'Войти' : 'Зарегистрироваться'}</button>
-                        <div class="switch-mode" onclick="window.switchAuthMode()">
-                            ${isLoginMode ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'}
-                        </div>
+                        <button onclick="window.login()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e5.png" alt="login"> Войти</button>
+                        <div class="switch-mode" onclick="window.showRegister()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e4.png" alt="register"> Нет аккаунта? Зарегистрироваться</div>
+                        <div class="privacy-link" onclick="showPrivacyPolicy()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4c4.png" alt="doc"> <span>Политика конфиденциальности</span></div>
                         <div id="authError" class="error"></div>
                     </div>
                 `;
             }
             
-            window.switchAuthMode = function() { isLoginMode = !isLoginMode; showAuth(); };
-            
-            function validatePhone(phone) { return /^[0-9\s\-\(\)]{5,20}$/.test(phone) && phone.replace(/[^0-9]/g, '').length >= 5; }
-            function formatFullPhone(countryCode, phone) { return countryCode + phone.replace(/[^0-9]/g, ''); }
-            
-            window.submitAuth = async function() {
-                const phoneInput = document.getElementById('authPhone');
-                const countryCode = document.getElementById('authCountryCode')?.value || '+7';
-                const password = document.getElementById('authPassword').value;
-                
-                if (!phoneInput?.value.trim()) { phoneInput.classList.add('error'); showAuthError('❌ Введите номер телефона'); return; }
-                if (!validatePhone(phoneInput.value)) { phoneInput.classList.add('error'); showAuthError('❌ Введите корректный номер телефона'); return; }
-                
-                const fullPhone = formatFullPhone(countryCode, phoneInput.value);
-                
-                if (!isLoginMode) {
-                    const username = document.getElementById('authUsername')?.value.trim();
-                    const displayName = document.getElementById('authDisplayName')?.value.trim();
-                    const bio = document.getElementById('authBio')?.value.trim() || '';
-                    const confirmPassword = document.getElementById('authConfirmPassword')?.value;
-                    
-                    if (!username) { document.getElementById('authUsername').classList.add('error'); showAuthError('❌ Введите имя пользователя'); return; }
-                    if (!displayName) { document.getElementById('authDisplayName').classList.add('error'); showAuthError('❌ Введите отображаемое имя'); return; }
-                    if (!password) { document.getElementById('authPassword').classList.add('error'); showAuthError('❌ Введите пароль'); return; }
-                    if (password !== confirmPassword) { showAuthError('❌ Пароли не совпадают'); return; }
-                    if (password.length < 3) { showAuthError('❌ Пароль должен быть не менее 3 символов'); return; }
-                    
-                    const { data: existingPhone } = await supabaseClient.from('users').select('*').eq('phone', fullPhone).single();
-                    if (existingPhone) { phoneInput.classList.add('error'); showAuthError('❌ Этот номер уже зарегистрирован'); return; }
-                    
-                    const { data: newUser, error } = await supabaseClient.from('users').insert({
-                        username, display_name: displayName, password, phone: fullPhone, bio,
-                        avatar_color: '#9b59b6', status: 'online', last_seen: new Date().toISOString(),
-                        hide_phone: false, invisible_mode: false
-                    }).select().single();
-                    
-                    if (error) { showAuthError('❌ Ошибка: ' + error.message); return; }
-                    currentUser = newUser; saveSession(currentUser); await loadMainScreen();
-                } else {
-                    const { data: user } = await supabaseClient.from('users').select('*').eq('phone', fullPhone).single();
-                    if (!user || user.password !== password) {
-                        phoneInput.classList.add('error'); document.getElementById('authPassword').classList.add('error');
-                        showAuthError('❌ Неверный номер или пароль'); return;
-                    }
-                    currentUser = user; saveSession(currentUser);
-                    await supabaseClient.from('users').update({ status: 'online', last_seen: new Date().toISOString() }).eq('id', currentUser.id);
-                    await loadMainScreen();
+            window.login = async function() {
+                if (!privacyAccepted) {
+                    showPrivacyPolicy();
+                    setTimeout(() => { if (!privacyAccepted) alert('Для использования Timate необходимо принять Политику конфиденциальности'); }, 100);
+                    return;
                 }
+                const phone = document.getElementById('authPhone').value;
+                const password = document.getElementById('authPassword').value;
+                const countryCode = document.getElementById('authCountryCode').value;
+                const fullPhone = countryCode + phone.replace(/[^0-9]/g, '');
+                
+                const { data: user } = await supabaseClient.from('users').select('*').eq('phone', fullPhone).single();
+                if (!user || user.password !== password) {
+                    document.getElementById('authError').textContent = '❌ Неверный номер или пароль';
+                    return;
+                }
+                currentUser = user;
+                saveSession(currentUser);
+                await supabaseClient.from('users').update({ status: 'online' }).eq('id', currentUser.id);
+                await loadMainScreen();
+            };
+            
+            window.showRegister = async function() {
+                if (!privacyAccepted) {
+                    showPrivacyPolicy();
+                    setTimeout(() => { if (!privacyAccepted) alert('Для использования Timate необходимо принять Политику конфиденциальности'); }, 100);
+                    return;
+                }
+                document.getElementById('app').innerHTML = `
+                    <div class="login-screen">
+                        <h1><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4ac.png" alt="chat"> Timate</h1>
+                        <p>регистрация</p>
+                        <input type="text" id="regUsername" placeholder="Имя пользователя">
+                        <input type="text" id="regDisplayName" placeholder="Отображаемое имя">
+                        <div class="phone-row">
+                            <select id="regCountryCode">
+                                <option value="+7">🇷🇺 Россия (+7)</option>
+                                <option value="+1">🇺🇸 США (+1)</option>
+                                <option value="+44">🇬🇧 Великобритания (+44)</option>
+                                <option value="+49">🇩🇪 Германия (+49)</option>
+                                <option value="+33">🇫🇷 Франция (+33)</option>
+                                <option value="+86">🇨🇳 Китай (+86)</option>
+                                <option value="+380">🇺🇦 Украина (+380)</option>
+                                <option value="+375">🇧🇾 Беларусь (+375)</option>
+                            </select>
+                            <input type="tel" id="regPhone" placeholder="Номер телефона">
+                        </div>
+                        <input type="password" id="regPassword" placeholder="Пароль">
+                        <input type="password" id="regConfirmPassword" placeholder="Повторите пароль">
+                        <button onclick="window.register()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2705.png" alt="check"> Зарегистрироваться</button>
+                        <div class="switch-mode" onclick="showAuth()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e5.png" alt="login"> Уже есть аккаунт? Войти</div>
+                        <div class="privacy-link" onclick="showPrivacyPolicy()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4c4.png" alt="doc"> <span>Политика конфиденциальности</span></div>
+                        <div id="regError" class="error"></div>
+                    </div>
+                `;
+            };
+            
+            window.register = async function() {
+                const username = document.getElementById('regUsername').value;
+                const displayName = document.getElementById('regDisplayName').value;
+                const phone = document.getElementById('regPhone').value;
+                const password = document.getElementById('regPassword').value;
+                const confirm = document.getElementById('regConfirmPassword').value;
+                const countryCode = document.getElementById('regCountryCode').value;
+                
+                if (!username || !displayName || !phone || !password) {
+                    document.getElementById('regError').textContent = '❌ Заполните все поля';
+                    return;
+                }
+                if (password !== confirm) {
+                    document.getElementById('regError').textContent = '❌ Пароли не совпадают';
+                    return;
+                }
+                if (password.length < 3) {
+                    document.getElementById('regError').textContent = '❌ Пароль минимум 3 символа';
+                    return;
+                }
+                
+                const fullPhone = countryCode + phone.replace(/[^0-9]/g, '');
+                const { data: existing } = await supabaseClient.from('users').select('*').eq('phone', fullPhone).single();
+                if (existing) {
+                    document.getElementById('regError').textContent = '❌ Этот номер уже зарегистрирован';
+                    return;
+                }
+                
+                const { data: newUser, error } = await supabaseClient.from('users').insert({
+                    username, display_name: displayName, password, phone: fullPhone,
+                    avatar_color: '#9b59b6', status: 'online'
+                }).select().single();
+                
+                if (error) { document.getElementById('regError').textContent = '❌ Ошибка: ' + error.message; return; }
+                currentUser = newUser;
+                saveSession(currentUser);
+                await loadMainScreen();
             };
             
             async function loadMainScreen() {
@@ -505,290 +600,211 @@
                 document.getElementById('app').innerHTML = `
                     <div class="timate-container">
                         <div class="sidebar">
-                            <div class="sidebar-header"><h2>Timate</h2><p>💚 салатовый мессенджер</p></div>
+                            <div class="sidebar-header"><h2><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4ac.png" alt="chat"> Timate</h2><p><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f33f.png" alt="leaf"> свободное общение</p></div>
                             <div class="current-user">
                                 <div class="user-avatar">${(currentUser.display_name || currentUser.username).charAt(0).toUpperCase()}</div>
                                 <div class="user-info">
                                     <div class="user-name">${escapeHtml(currentUser.display_name || currentUser.username)}</div>
-                                    <div class="user-status">🟢 онлайн</div>
-                                    ${!currentUser.hide_phone ? `<div class="user-phone">${escapeHtml(currentUser.phone || '')}</div>` : ''}
-                                    ${currentUser.bio ? `<div class="user-bio">${escapeHtml(currentUser.bio)}</div>` : ''}
+                                    <div class="user-status"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f535.png" alt="online"> онлайн</div>
                                 </div>
-                                <button class="settings-btn" onclick="window.openSettings()" title="Настройки">⚙️</button>
-                                <button class="logout-btn" onclick="window.logout()" title="Выйти">🚪</button>
+                                <button class="settings-btn" onclick="openSettings()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2699.png" alt="settings"></button>
+                                <button class="logout-btn" onclick="logout()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f6aa.png" alt="logout"></button>
                             </div>
+                            <button class="create-chat-btn" onclick="showCreateChatModal()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2795.png" alt="plus"> Создать группу/канал</button>
                             <div class="search-box">
-                                <input type="text" id="searchInput" placeholder="🔍 Поиск по имени или номеру..." oninput="window.searchUsers()">
+                                <img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f50d.png" alt="search">
+                                <input type="text" id="searchInput" placeholder="Поиск чатов...">
                             </div>
-                            <div class="tabs">
-                                <div class="tab active" onclick="window.switchTab('contacts')">📱 Контакты</div>
-                                <div class="tab" onclick="window.switchTab('users')">🌍 Все пользователи</div>
-                            </div>
-                            <div id="contactsList" class="contacts-list"><div class="empty-state">Загрузка...</div></div>
-                            <div id="usersList" class="users-list" style="display: none;"></div>
+                            <div id="chatsList" class="chats-list"><div class="empty-state"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e5.png" alt="inbox">Загрузка...</div></div>
                         </div>
-                        <div class="chat-area" id="chatArea"><div class="empty-state">💬 Выберите контакт для общения</div></div>
+                        <div class="chat-area" id="chatArea"><div class="empty-state"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4ac.png" alt="chat">Выберите чат для общения</div></div>
                     </div>
                 `;
-                await loadContacts(); await loadAllUsers(); startAutoUpdate();
+                await loadMyChats();
+                startAutoUpdate();
             }
             
-            function startAutoUpdate() {
-                if (autoUpdateInterval) clearInterval(autoUpdateInterval);
-                autoUpdateInterval = setInterval(async () => {
-                    if (currentContact) {
-                        await checkForNewMessages();
-                    }
-                    await loadContacts(); // Обновляем статусы контактов
-                }, 300);
-            }
-            
-            async function checkForNewMessages() {
-                if (!currentContact) return;
-                const { data: messages } = await supabaseClient.from('messages').select('*').or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${currentContact}),and(from_user_id.eq.${currentContact},to_user_id.eq.${currentUser.id})`).order('created_at');
-                const currentString = JSON.stringify(messages);
-                if (currentString !== lastMessagesString) {
-                    lastMessagesString = currentString;
-                    window.currentMessages = messages || [];
-                    await renderChat();
-                    // Отмечаем как прочитанные
-                    await supabaseClient.from('messages').update({ is_read: true }).eq('from_user_id', currentContact).eq('to_user_id', currentUser.id).eq('is_read', false);
-                    const container = document.getElementById('messagesContainer');
-                    if (container) container.scrollTop = container.scrollHeight;
-                }
-            }
-            
-            window.openSettings = function() {
-                const modal = document.createElement('div');
-                modal.className = 'modal';
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        <h3>⚙️ Настройки профиля</h3>
-                        <input type="text" id="settingsDisplayName" placeholder="Отображаемое имя" value="${escapeHtml(currentUser.display_name || '')}">
-                        <textarea id="settingsBio" rows="3" placeholder="О себе">${escapeHtml(currentUser.bio || '')}</textarea>
-                        <div class="phone-row">
-                            <select id="settingsCountryCode">${countries.map(c => `<option value="${c.code}" ${currentUser.phone?.startsWith(c.code) ? 'selected' : ''}>${c.name} (${c.code})</option>`).join('')}</select>
-                            <input type="tel" id="settingsPhone" placeholder="Номер телефона" value="${currentUser.phone ? currentUser.phone.replace(/^\+?\d+/, '') : ''}">
-                        </div>
-                        <div class="checkbox-row">
-                            <input type="checkbox" id="settingsHidePhone" ${currentUser.hide_phone ? 'checked' : ''}>
-                            <label>🔒 Скрыть номер телефона (не показывать другим)</label>
-                        </div>
-                        <div class="checkbox-row">
-                            <input type="checkbox" id="settingsInvisibleMode" ${currentUser.invisible_mode ? 'checked' : ''}>
-                            <label>👻 Невидимый режим (не отображаться в списке всех пользователей)</label>
-                        </div>
-                        <div>
-                            <button class="save-btn" onclick="window.saveSettings()">💾 Сохранить</button>
-                            <button class="cancel-btn" onclick="this.closest('.modal').remove()">❌ Отмена</button>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-            };
-            
-            window.saveSettings = async function() {
-                const displayName = document.getElementById('settingsDisplayName').value.trim();
-                const bio = document.getElementById('settingsBio').value.trim();
-                const countryCode = document.getElementById('settingsCountryCode').value;
-                const phoneNumber = document.getElementById('settingsPhone').value.trim();
-                const hidePhone = document.getElementById('settingsHidePhone').checked;
-                const invisibleMode = document.getElementById('settingsInvisibleMode').checked;
+            async function loadMyChats() {
+                const { data: memberships } = await supabaseClient
+                    .from('chat_members')
+                    .select('chat_id, chats(*)')
+                    .eq('user_id', currentUser.id);
                 
-                if (!displayName) { alert('Введите отображаемое имя'); return; }
-                
-                let newPhone = currentUser.phone;
-                if (phoneNumber && validatePhone(phoneNumber)) {
-                    newPhone = formatFullPhone(countryCode, phoneNumber);
-                    const { data: existing } = await supabaseClient.from('users').select('*').eq('phone', newPhone).neq('id', currentUser.id).single();
-                    if (existing) { alert('Этот номер уже используется другим пользователем'); return; }
+                const container = document.getElementById('chatsList');
+                if (!memberships?.length) {
+                    container.innerHTML = '<div class="empty-state"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e5.png" alt="inbox">Нет чатов. Создайте группу или подпишитесь на канал</div>';
+                    return;
                 }
                 
-                const { error } = await supabaseClient.from('users').update({
-                    display_name: displayName, bio, phone: newPhone, hide_phone: hidePhone, invisible_mode: invisibleMode, updated_at: new Date().toISOString()
-                }).eq('id', currentUser.id);
-                
-                if (error) { alert('Ошибка: ' + error.message); return; }
-                
-                currentUser.display_name = displayName; currentUser.bio = bio; currentUser.phone = newPhone;
-                currentUser.hide_phone = hidePhone; currentUser.invisible_mode = invisibleMode;
-                saveSession(currentUser);
-                document.querySelector('.modal')?.remove();
-                await loadMainScreen();
-                alert('✅ Настройки сохранены');
-            };
-            
-            window.logout = async function() {
-                if (currentUser) await supabaseClient.from('users').update({ status: 'offline', last_seen: new Date().toISOString() }).eq('id', currentUser.id);
-                if (autoUpdateInterval) clearInterval(autoUpdateInterval);
-                clearSession(); currentUser = null; currentContact = null;
-                if (messagesSubscription) messagesSubscription.unsubscribe();
-                showAuth();
-            };
-            
-            async function loadContacts() {
-                const { data: contacts } = await supabaseClient.from('contacts').select(`contact_id, nickname, users:contact_id(*)`).eq('user_id', currentUser.id);
-                const container = document.getElementById('contactsList');
-                if (!contacts?.length) { container.innerHTML = '<div class="empty-state">📭 Нет контактов</div>'; return; }
-                container.innerHTML = contacts.map(c => {
-                    const u = c.users;
-                    return `<div class="contact-item" onclick="window.selectContact('${u.id}')" data-contact-id="${u.id}">
-                        <div class="contact-avatar" style="background: ${u.avatar_color || '#9b59b6'}">${(u.display_name || u.username).charAt(0).toUpperCase()}</div>
-                        <div class="contact-info">
-                            <div class="contact-name">${escapeHtml(c.nickname || u.display_name || u.username)}</div>
-                            <div class="contact-status ${u.status === 'online' ? 'online' : 'offline'}">${u.status === 'online' ? '🟢 онлайн' : '⚫ офлайн'}</div>
-                            ${!u.hide_phone && u.phone ? `<div class="contact-phone">${escapeHtml(u.phone)}</div>` : ''}
-                            ${u.bio ? `<div class="contact-bio">${escapeHtml(u.bio.substring(0, 40))}</div>` : ''}
-                        </div>
-                        <div class="contact-actions">
-                            <button class="delete-contact-btn" onclick="event.stopPropagation(); window.deleteContact('${u.id}')" title="Удалить контакт">🗑️</button>
-                            <button class="call-btn" onclick="event.stopPropagation(); window.startCall('${u.id}', 'audio')">📞</button>
-                            <button class="call-btn" onclick="event.stopPropagation(); window.startCall('${u.id}', 'video')">📹</button>
+                container.innerHTML = memberships.map(m => {
+                    const chat = m.chats;
+                    const typeIcon = chat.type === 'group' ? '<img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f465.png" alt="group">' : '<img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e2.png" alt="channel">';
+                    const typeText = chat.type === 'group' ? 'Группа' : 'Канал';
+                    return `<div class="chat-item" onclick="selectChat('${chat.id}')" data-chat-id="${chat.id}">
+                        <div class="chat-avatar">${typeIcon}</div>
+                        <div class="chat-info">
+                            <div class="chat-name">${escapeHtml(chat.name)}</div>
+                            <div class="chat-type">${typeText}</div>
                         </div>
                     </div>`;
                 }).join('');
             }
             
-            window.deleteContact = async function(contactId) {
-                if (confirm('Удалить этот контакт?')) {
-                    await supabaseClient.from('contacts').delete().eq('user_id', currentUser.id).eq('contact_id', contactId);
-                    if (currentContact === contactId) {
-                        currentContact = null;
-                        document.getElementById('chatArea').innerHTML = '<div class="empty-state">💬 Выберите контакт для общения</div>';
-                    }
-                    await loadContacts();
-                    showNotification('🗑️ Контакт удалён');
-                }
-            };
-            
-            async function loadAllUsers() {
-                let query = supabaseClient.from('users').select('*').neq('id', currentUser.id);
-                if (currentUser.invisible_mode) query = query.eq('invisible_mode', false);
-                const { data: users } = await query;
-                const container = document.getElementById('usersList');
-                if (!users?.length) { container.innerHTML = '<div class="empty-state">👥 Нет других пользователей</div>'; return; }
-                const { data: contacts } = await supabaseClient.from('contacts').select('contact_id').eq('user_id', currentUser.id);
-                const contactIds = new Set(contacts?.map(c => c.contact_id) || []);
-                container.innerHTML = users.filter(u => !u.invisible_mode || u.id === currentUser.id).map(u => `
-                    <div class="user-item">
-                        <div class="user-avatar-small" style="background: ${u.avatar_color || '#9b59b6'}">${(u.display_name || u.username).charAt(0).toUpperCase()}</div>
-                        <div class="user-info-small">
-                            <div class="contact-name">${escapeHtml(u.display_name || u.username)}</div>
-                            ${!u.hide_phone && u.phone ? `<div style="font-size:11px;color:#999;">${escapeHtml(u.phone)}</div>` : ''}
-                            ${u.bio ? `<div style="font-size:10px;color:#666;">${escapeHtml(u.bio.substring(0, 40))}</div>` : ''}
-                        </div>
-                        ${!contactIds.has(u.id) ? `<button class="add-btn" onclick="window.addContact('${u.id}')">➕ Добавить</button>` : '<span style="font-size:12px;color:#8dc63f;">✓ в контактах</span>'}
-                    </div>
-                `).join('');
-            }
-            
-            window.searchUsers = async function() {
-                const query = document.getElementById('searchInput').value.toLowerCase();
-                if (!query) { loadAllUsers(); return; }
-                let dbQuery = supabaseClient.from('users').select('*').neq('id', currentUser.id);
-                if (currentUser.invisible_mode) dbQuery = dbQuery.eq('invisible_mode', false);
-                const { data: users } = await dbQuery.or(`username.ilike.%${query}%,display_name.ilike.%${query}%${!currentUser.hide_phone ? `,phone.ilike.%${query}%` : ''}`);
-                const container = document.getElementById('usersList');
-                if (!users?.length) { container.innerHTML = '<div class="empty-state">🔍 Ничего не найдено</div>'; return; }
-                const { data: contacts } = await supabaseClient.from('contacts').select('contact_id').eq('user_id', currentUser.id);
-                const contactIds = new Set(contacts?.map(c => c.contact_id) || []);
-                container.innerHTML = users.map(u => `
-                    <div class="user-item">
-                        <div class="user-avatar-small" style="background: ${u.avatar_color || '#9b59b6'}">${(u.display_name || u.username).charAt(0).toUpperCase()}</div>
-                        <div class="user-info-small">
-                            <div class="contact-name">${escapeHtml(u.display_name || u.username)}</div>
-                            ${!u.hide_phone && u.phone ? `<div style="font-size:11px;color:#999;">${escapeHtml(u.phone)}</div>` : ''}
-                        </div>
-                        ${!contactIds.has(u.id) ? `<button class="add-btn" onclick="window.addContact('${u.id}')">➕ Добавить</button>` : '<span style="font-size:12px;color:#8dc63f;">✓ в контактах</span>'}
-                    </div>
-                `).join('');
-            };
-            
-            window.addContact = async function(contactId) {
-                await supabaseClient.from('contacts').insert({ user_id: currentUser.id, contact_id: contactId });
-                showNotification('✅ Контакт добавлен');
-                await loadContacts(); await loadAllUsers();
-                const searchInput = document.getElementById('searchInput'); if (searchInput) searchInput.value = '';
-            };
-            
-            window.selectContact = async function(contactId) {
-                currentContact = contactId;
-                document.querySelectorAll('.contact-item').forEach(el => el.classList.remove('active'));
-                const activeEl = document.querySelector(`.contact-item[data-contact-id="${contactId}"]`);
+            window.selectChat = async function(chatId) {
+                currentChat = chatId;
+                document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+                const activeEl = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
                 if (activeEl) activeEl.classList.add('active');
-                await loadMessages(); await renderChat();
+                await loadChatMessages();
+                await renderChat();
                 lastMessagesString = JSON.stringify(window.currentMessages);
             };
             
-            async function loadMessages() {
-                if (!currentContact) return;
-                const { data: messages } = await supabaseClient.from('messages').select('*').or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${currentContact}),and(from_user_id.eq.${currentContact},to_user_id.eq.${currentUser.id})`).order('created_at');
+            async function loadChatMessages() {
+                if (!currentChat) return;
+                const { data: messages } = await supabaseClient
+                    .from('messages')
+                    .select('*, users:from_user_id(username, display_name)')
+                    .eq('chat_id', currentChat)
+                    .order('created_at');
                 window.currentMessages = messages || [];
             }
             
             async function renderChat() {
-                if (!currentContact) return;
-                const { data: contact } = await supabaseClient.from('users').select('*').eq('id', currentContact).single();
+                if (!currentChat) return;
+                const { data: chat } = await supabaseClient.from('chats').select('*').eq('id', currentChat).single();
                 const chatArea = document.getElementById('chatArea');
                 const messages = window.currentMessages || [];
+                const typeIcon = chat.type === 'group' ? '<img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f465.png" alt="group">' : '<img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e2.png" alt="channel">';
+                
                 chatArea.innerHTML = `
                     <div class="chat-header">
-                        <div class="chat-header-avatar" style="background: ${contact?.avatar_color || '#9b59b6'}">${(contact?.display_name || contact?.username || '?').charAt(0).toUpperCase()}</div>
+                        <div class="chat-header-avatar">${typeIcon}</div>
                         <div class="chat-header-info">
-                            <h3>${escapeHtml(contact?.display_name || contact?.username)}</h3>
-                            <p>${contact?.status === 'online' ? '🟢 онлайн' : '⚫ офлайн'}</p>
-                            ${!contact?.hide_phone && contact?.phone ? `<div class="phone">📞 ${escapeHtml(contact.phone)}</div>` : ''}
-                            ${contact?.bio ? `<div class="bio">📝 ${escapeHtml(contact.bio)}</div>` : ''}
+                            <h3>${escapeHtml(chat.name)}</h3>
+                            <p><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f535.png" alt="online"> ${chat.type === 'group' ? 'Группа' : 'Канал'}</p>
                         </div>
-                        <div class="call-controls">
-                            <button onclick="window.startCall('${currentContact}', 'audio')">📞 Аудио</button>
-                            <button onclick="window.startCall('${currentContact}', 'video')">📹 Видео</button>
-                        </div>
+                        ${chat.type === 'group' ? `<div class="chat-actions"><button onclick="inviteToGroup()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e4.png" alt="invite"> Пригласить</button></div>` : ''}
                     </div>
                     <div class="messages-container" id="messagesContainer">
-                        ${messages.length === 0 ? '<div class="empty-state">💬 Нет сообщений</div>' : messages.map(msg => `
+                        ${messages.length === 0 ? '<div class="empty-state"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4ac.png" alt="chat">Нет сообщений</div>' : messages.map(msg => `
                             <div class="message ${msg.from_user_id === currentUser.id ? 'out' : 'in'}">
                                 <div class="message-bubble">
+                                    ${msg.from_user_id !== currentUser.id ? `<div class="message-sender"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f464.png" alt="user"> ${escapeHtml(msg.users?.display_name || msg.users?.username)}</div>` : ''}
                                     <div class="message-text">${escapeHtml(msg.content)}</div>
-                                    <div class="message-time">${new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                                    <div class="message-time"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f553.png" alt="time"> ${new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
                                 </div>
                             </div>
                         `).join('')}
                     </div>
                     <div class="input-area">
-                        <input type="text" id="messageInput" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') window.sendMessage()">
-                        <button onclick="window.sendMessage()">📤 Отправить</button>
+                        <input type="text" id="messageInput" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+                        <button onclick="sendChatMessage()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e8.png" alt="send"> Отправить</button>
                     </div>
                 `;
                 const container = document.getElementById('messagesContainer');
                 if (container) container.scrollTop = container.scrollHeight;
             }
             
-            window.sendMessage = async function() {
+            window.sendChatMessage = async function() {
                 const input = document.getElementById('messageInput');
                 const content = input.value.trim();
-                if (!content || !currentContact) return;
-                await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, to_user_id: currentContact, content });
+                if (!content || !currentChat) return;
+                await supabaseClient.from('messages').insert({
+                    from_user_id: currentUser.id,
+                    chat_id: currentChat,
+                    content: content
+                });
                 input.value = '';
-                await loadMessages(); await renderChat();
+                await loadChatMessages();
+                await renderChat();
                 lastMessagesString = JSON.stringify(window.currentMessages);
             };
             
-            window.startCall = function(contactId, type) { alert(`🔔 ${type === 'audio' ? 'Аудиозвонок' : 'Видеозвонок'}\n\n(Функция в разработке)`); };
+            window.showCreateChatModal = function() {
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h3><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/2795.png" alt="plus"> Создать чат</h3>
+                        <select id="chatType">
+                            <option value="group"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f465.png" alt="group"> Группа (приватная)</option>
+                            <option value="channel"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e2.png" alt="channel"> Канал</option>
+                        </select>
+                        <div id="privacyOption" style="display:none;">
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="isPrivate">
+                                <label><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f512.png" alt="lock"> Приватный канал</label>
+                            </div>
+                        </div>
+                        <input type="text" id="chatName" placeholder="Название">
+                        <textarea id="chatDescription" rows="2" placeholder="Описание"></textarea>
+                        <button class="save-btn" onclick="createChat()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4be.png" alt="save"> Создать</button>
+                        <button class="cancel-btn" onclick="this.closest('.modal').remove()"><img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/274c.png" alt="cancel"> Отмена</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                
+                document.getElementById('chatType').onchange = function() {
+                    document.getElementById('privacyOption').style.display = this.value === 'channel' ? 'block' : 'none';
+                };
+            };
             
-            window.switchTab = function(tab) {
-                const contactsList = document.getElementById('contactsList');
-                const usersList = document.getElementById('usersList');
-                const tabs = document.querySelectorAll('.tab');
-                tabs.forEach((t, i) => { t.classList.remove('active'); if ((tab === 'contacts' && i === 0) || (tab === 'users' && i === 1)) t.classList.add('active'); });
-                if (tab === 'contacts') { contactsList.style.display = 'block'; usersList.style.display = 'none'; }
-                else { contactsList.style.display = 'none'; usersList.style.display = 'block'; loadAllUsers(); }
+            window.createChat = async function() {
+                const type = document.getElementById('chatType').value;
+                const name = document.getElementById('chatName').value.trim();
+                const description = document.getElementById('chatDescription').value.trim();
+                const isPrivate = type === 'channel' ? document.getElementById('isPrivate')?.checked : true;
+                
+                if (!name) { alert('Введите название'); return; }
+                
+                const { data: chat, error } = await supabaseClient.from('chats').insert({
+                    name, type, is_private: isPrivate, description,
+                    avatar_color: '#8dc63f', created_by: currentUser.id
+                }).select().single();
+                
+                if (error) { alert('Ошибка: ' + error.message); return; }
+                document.querySelector('.modal')?.remove();
+                showNotification(`${type === 'group' ? 'Группа' : 'Канал'} "${name}" создан`);
+                await loadMyChats();
+                selectChat(chat.id);
+            };
+            
+            function startAutoUpdate() {
+                if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+                autoUpdateInterval = setInterval(async () => {
+                    if (currentChat) {
+                        const { data: messages } = await supabaseClient
+                            .from('messages')
+                            .select('*')
+                            .eq('chat_id', currentChat)
+                            .order('created_at');
+                        const currentString = JSON.stringify(messages);
+                        if (currentString !== lastMessagesString) {
+                            lastMessagesString = currentString;
+                            window.currentMessages = messages || [];
+                            await renderChat();
+                            const container = document.getElementById('messagesContainer');
+                            if (container) container.scrollTop = container.scrollHeight;
+                        }
+                    }
+                }, 300);
+            }
+            
+            window.inviteToGroup = function() {
+                alert('🔜 Функция приглашения в группу будет добавлена в следующем обновлении');
+            };
+            
+            window.openSettings = function() { alert('⚙️ Настройки профиля в разработке'); };
+            
+            window.logout = async function() {
+                if (currentUser) await supabaseClient.from('users').update({ status: 'offline' }).eq('id', currentUser.id);
+                if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+                clearSession(); currentUser = null; currentChat = null;
+                showAuth();
             };
             
             function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-            function showAuthError(msg) { const e = document.getElementById('authError'); if(e){ e.textContent=msg; setTimeout(()=>e.textContent='',3000); } }
-            
-            window.addEventListener('beforeunload', async () => { if(currentUser) await supabaseClient.from('users').update({ status: 'offline', last_seen: new Date().toISOString() }).eq('id', currentUser.id); });
         })();
     </script>
 </body>
