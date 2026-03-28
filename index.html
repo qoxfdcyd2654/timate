@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Timate</title>
-    <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -429,6 +428,7 @@
             let lastMessagesString = '';
             let privacyAccepted = localStorage.getItem('privacy_accepted') === 'true';
             let activeTab = 'contacts';
+            let isMainScreenLoaded = false;
             
             const savedUser = localStorage.getItem('timate_user');
             if (savedUser) {
@@ -580,7 +580,11 @@
             };
             
             async function loadMainScreen() {
+                if (isMainScreenLoaded) return;
+                isMainScreenLoaded = true;
+                
                 if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+                
                 document.getElementById('app').innerHTML = `
                     <div class="timate-container">
                         <div class="sidebar">
@@ -607,21 +611,33 @@
                                 <div class="tab ${activeTab === 'chats' ? 'active' : ''}" onclick="switchTab('chats')"><i class="fas fa-layer-group"></i> Мои чаты</div>
                                 <div class="tab ${activeTab === 'public' ? 'active' : ''}" onclick="switchTab('public')"><i class="fas fa-globe"></i> Публичные каналы</div>
                             </div>
-                            <div id="contactsList" class="contacts-list" style="${activeTab === 'contacts' ? 'block' : 'none'}"><div class="empty-state"><i class="fas fa-inbox"></i>Загрузка...</div></div>
-                            <div id="usersList" class="users-list" style="${activeTab === 'users' ? 'block' : 'none'}"></div>
-                            <div id="chatsList" class="chats-list" style="${activeTab === 'chats' ? 'block' : 'none'}"></div>
-                            <div id="publicChannelsList" class="public-channels-list" style="${activeTab === 'public' ? 'block' : 'none'}"></div>
+                            <div id="contactsList" class="contacts-list"></div>
+                            <div id="usersList" class="users-list" style="display: none;"></div>
+                            <div id="chatsList" class="chats-list" style="display: none;"></div>
+                            <div id="publicChannelsList" class="public-channels-list" style="display: none;"></div>
                         </div>
                         <div class="chat-area" id="chatArea"><div class="empty-state"><i class="fas fa-comment"></i>Выберите чат для общения</div></div>
                     </div>
                 `;
-                await loadContacts(); await loadAllUsers(); await loadMyChats(); await loadPublicChannels();
+                
+                await loadContacts(); 
+                await loadAllUsers(); 
+                await loadMyChats(); 
+                await loadPublicChannels();
+                
+                // Показываем активную вкладку
+                document.getElementById('contactsList').style.display = activeTab === 'contacts' ? 'block' : 'none';
+                document.getElementById('usersList').style.display = activeTab === 'users' ? 'block' : 'none';
+                document.getElementById('chatsList').style.display = activeTab === 'chats' ? 'block' : 'none';
+                document.getElementById('publicChannelsList').style.display = activeTab === 'public' ? 'block' : 'none';
+                
                 startAutoUpdate();
             }
             
             async function loadContacts() {
                 const { data: contacts } = await supabaseClient.from('contacts').select(`contact_id, nickname, users:contact_id(*)`).eq('user_id', currentUser.id);
                 const container = document.getElementById('contactsList');
+                if (!container) return;
                 if (!contacts?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-address-book"></i>Нет контактов</div>'; return; }
                 container.innerHTML = contacts.map(c => {
                     const u = c.users;
@@ -655,6 +671,7 @@
                 if (currentUser.invisible_mode) query = query.eq('invisible_mode', false);
                 const { data: users } = await query;
                 const container = document.getElementById('usersList');
+                if (!container) return;
                 if (!users?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-globe"></i>Нет пользователей</div>'; return; }
                 const { data: contacts } = await supabaseClient.from('contacts').select('contact_id').eq('user_id', currentUser.id);
                 const contactIds = new Set(contacts?.map(c => c.contact_id) || []);
@@ -674,13 +691,16 @@
             window.addContact = async function(contactId) {
                 await supabaseClient.from('contacts').insert({ user_id: currentUser.id, contact_id: contactId });
                 showNotification('Контакт добавлен');
-                await loadContacts(); await loadAllUsers();
-                document.getElementById('searchInput').value = '';
+                await loadContacts(); 
+                await loadAllUsers();
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) searchInput.value = '';
             };
             
             async function loadMyChats() {
                 const { data: memberships } = await supabaseClient.from('chat_members').select('chat_id, chats(*)').eq('user_id', currentUser.id);
                 const container = document.getElementById('chatsList');
+                if (!container) return;
                 if (!memberships?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-layer-group"></i>Нет групп/каналов</div>'; return; }
                 container.innerHTML = memberships.map(m => {
                     const chat = m.chats;
@@ -698,6 +718,7 @@
             async function loadPublicChannels() {
                 const { data: channels } = await supabaseClient.from('chats').select('*').eq('type', 'channel').eq('is_private', false);
                 const container = document.getElementById('publicChannelsList');
+                if (!container) return;
                 if (!channels?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-globe"></i>Нет публичных каналов</div>'; return; }
                 const { data: memberships } = await supabaseClient.from('chat_members').select('chat_id').eq('user_id', currentUser.id);
                 const myChatIds = new Set(memberships?.map(m => m.chat_id) || []);
@@ -719,37 +740,30 @@
                 if (!error) {
                     showNotification('Вы подписались на канал');
                     await loadMyChats();
-                    if (activeTab === 'public') switchTab('public');
+                    if (activeTab === 'public') loadPublicChannels();
                 } else {
                     showNotification('Ошибка подписки');
                 }
             };
             
-            window.inviteToChannel = async function(chatId, userName) {
-                const { data: users } = await supabaseClient.from('users').select('id, username, display_name').ilike('username', `%${userName}%`).limit(10);
-                if (!users?.length) { alert('Пользователь не найден'); return; }
-                // Простая форма приглашения
-                const user = users[0];
-                if (confirm(`Пригласить ${user.display_name || user.username} в канал?`)) {
-                    const { error } = await supabaseClient.from('chat_members').insert({ chat_id: chatId, user_id: user.id, role: 'member' });
-                    if (!error) showNotification('Приглашение отправлено');
-                    else showNotification('Ошибка: пользователь уже в канале');
-                }
-            };
-            
             window.selectContact = async function(contactId) {
-                currentContact = contactId; currentChat = null;
+                currentContact = contactId; 
+                currentChat = null;
                 document.querySelectorAll('.contact-item').forEach(el => el.classList.remove('active'));
-                document.querySelector(`.contact-item[data-contact-id="${contactId}"]`)?.classList.add('active');
+                const activeEl = document.querySelector(`.contact-item[data-contact-id="${contactId}"]`);
+                if (activeEl) activeEl.classList.add('active');
                 await loadPrivateMessages(contactId);
                 await renderPrivateChat(contactId);
                 lastMessagesString = JSON.stringify(window.currentMessages);
             };
             
             window.selectChat = async function(chatId, type) {
-                currentChat = chatId; currentContact = null; currentChatType = type;
+                currentChat = chatId; 
+                currentContact = null; 
+                currentChatType = type;
                 document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
-                document.querySelector(`.chat-item[data-chat-id="${chatId}"]`)?.classList.add('active');
+                const activeEl = document.querySelector(`.chat-item[data-chat-id="${chatId}"]`);
+                if (activeEl) activeEl.classList.add('active');
                 await loadGroupMessages(chatId);
                 await renderGroupChat(chatId);
                 lastMessagesString = JSON.stringify(window.currentMessages);
@@ -956,6 +970,7 @@
                     if (currentUser.invisible_mode) dbQuery = dbQuery.eq('invisible_mode', false);
                     const { data: users } = await dbQuery.or(`username.ilike.%${query}%,display_name.ilike.%${query}%${!currentUser.hide_phone ? `,phone.ilike.%${query}%` : ''}`);
                     const container = document.getElementById('usersList');
+                    if (!container) return;
                     if (!users?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i>Ничего не найдено</div>'; return; }
                     const { data: contacts } = await supabaseClient.from('contacts').select('contact_id').eq('user_id', currentUser.id);
                     const contactIds = new Set(contacts?.map(c => c.contact_id) || []);
@@ -974,10 +989,11 @@
                     const { data: contacts } = await supabaseClient.from('contacts').select(`contact_id, nickname, users:contact_id(*)`).eq('user_id', currentUser.id);
                     const filtered = contacts?.filter(c => (c.nickname || c.users.display_name || c.users.username).toLowerCase().includes(query)) || [];
                     const container = document.getElementById('contactsList');
+                    if (!container) return;
                     if (!filtered.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i>Ничего не найдено</div>'; return; }
                     container.innerHTML = filtered.map(c => {
                         const u = c.users;
-                        return `<div class="contact-item" onclick="selectContact('${u.id}')">
+                        return `<div class="contact-item" onclick="selectContact('${u.id}')" data-contact-id="${u.id}">
                             <div class="contact-avatar" style="background: ${u.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
                             <div class="contact-info"><div class="contact-name">${escapeHtml(c.nickname || u.display_name || u.username)}</div></div>
                         </div>`;
@@ -987,11 +1003,12 @@
                     const { data: memberships } = await supabaseClient.from('chat_members').select('chat_id, chats(*)').eq('user_id', currentUser.id);
                     const filtered = memberships?.filter(m => m.chats.name.toLowerCase().includes(query)) || [];
                     const container = document.getElementById('chatsList');
+                    if (!container) return;
                     if (!filtered.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i>Ничего не найдено</div>'; return; }
                     container.innerHTML = filtered.map(m => {
                         const chat = m.chats;
                         const typeIcon = chat.type === 'group' ? '<i class="fas fa-users"></i>' : '<i class="fas fa-broadcast-tower"></i>';
-                        return `<div class="chat-item" onclick="selectChat('${chat.id}', '${chat.type}')">
+                        return `<div class="chat-item" onclick="selectChat('${chat.id}', '${chat.type}')" data-chat-id="${chat.id}">
                             <div class="chat-avatar" style="background: ${chat.avatar_color || '#8dc63f'}">${typeIcon}</div>
                             <div class="chat-info"><div class="chat-name">${escapeHtml(chat.name)}</div></div>
                         </div>`;
@@ -1000,6 +1017,7 @@
                     if (!query) { loadPublicChannels(); return; }
                     const { data: channels } = await supabaseClient.from('chats').select('*').eq('type', 'channel').eq('is_private', false).ilike('name', `%${query}%`);
                     const container = document.getElementById('publicChannelsList');
+                    if (!container) return;
                     if (!channels?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i>Ничего не найдено</div>'; return; }
                     const { data: memberships } = await supabaseClient.from('chat_members').select('chat_id').eq('user_id', currentUser.id);
                     const myChatIds = new Set(memberships?.map(m => m.chat_id) || []);
@@ -1019,10 +1037,16 @@
             
             window.switchTab = function(tab) {
                 activeTab = tab;
-                document.getElementById('contactsList').style.display = tab === 'contacts' ? 'block' : 'none';
-                document.getElementById('usersList').style.display = tab === 'users' ? 'block' : 'none';
-                document.getElementById('chatsList').style.display = tab === 'chats' ? 'block' : 'none';
-                document.getElementById('publicChannelsList').style.display = tab === 'public' ? 'block' : 'none';
+                const contactsList = document.getElementById('contactsList');
+                const usersList = document.getElementById('usersList');
+                const chatsList = document.getElementById('chatsList');
+                const publicList = document.getElementById('publicChannelsList');
+                
+                if (contactsList) contactsList.style.display = tab === 'contacts' ? 'block' : 'none';
+                if (usersList) usersList.style.display = tab === 'users' ? 'block' : 'none';
+                if (chatsList) chatsList.style.display = tab === 'chats' ? 'block' : 'none';
+                if (publicList) publicList.style.display = tab === 'public' ? 'block' : 'none';
+                
                 document.querySelectorAll('.tab').forEach((t, i) => {
                     t.classList.remove('active');
                     if ((tab === 'contacts' && i === 0) || (tab === 'users' && i === 1) || (tab === 'chats' && i === 2) || (tab === 'public' && i === 3)) t.classList.add('active');
@@ -1030,7 +1054,9 @@
                 if (tab === 'users') loadAllUsers();
                 if (tab === 'chats') loadMyChats();
                 if (tab === 'public') loadPublicChannels();
-                document.getElementById('searchInput').value = '';
+                
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) searchInput.value = '';
             };
             
             window.openSettings = function() {
@@ -1065,7 +1091,10 @@
                     display_name: displayName, bio, hide_phone: hidePhone, invisible_mode: invisibleMode
                 }).eq('id', currentUser.id);
                 if (error) { alert('Ошибка'); return; }
-                currentUser.display_name = displayName; currentUser.bio = bio; currentUser.hide_phone = hidePhone; currentUser.invisible_mode = invisibleMode;
+                currentUser.display_name = displayName; 
+                currentUser.bio = bio; 
+                currentUser.hide_phone = hidePhone; 
+                currentUser.invisible_mode = invisibleMode;
                 saveSession(currentUser);
                 document.querySelector('.modal')?.remove();
                 await loadMainScreen();
@@ -1077,7 +1106,11 @@
             window.logout = async function() {
                 if (currentUser) await supabaseClient.from('users').update({ status: 'offline' }).eq('id', currentUser.id);
                 if (autoUpdateInterval) clearInterval(autoUpdateInterval);
-                clearSession(); currentUser = null; currentContact = null; currentChat = null;
+                clearSession(); 
+                currentUser = null; 
+                currentContact = null; 
+                currentChat = null;
+                isMainScreenLoaded = false;
                 showAuth();
             };
             
