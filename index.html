@@ -66,7 +66,7 @@
         .user-status { font-size: 12px; color: #2ecc71; }
         .user-phone { font-size: 10px; color: #999; margin-top: 2px; }
         .user-bio { font-size: 11px; color: #666; margin-top: 2px; font-style: italic; }
-        .settings-btn {
+        .settings-btn, .logout-btn {
             background: none;
             border: none;
             cursor: pointer;
@@ -75,17 +75,7 @@
             border-radius: 50%;
             transition: background 0.2s;
         }
-        .settings-btn:hover { background: #f0f0f0; }
-        .logout-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 20px;
-            padding: 8px;
-            border-radius: 50%;
-            transition: background 0.2s;
-        }
-        .logout-btn:hover { background: #f0f0f0; }
+        .settings-btn:hover, .logout-btn:hover { background: #f0f0f0; }
         .search-box { padding: 15px; border-bottom: 1px solid #eee; }
         .search-box input {
             width: 100%;
@@ -126,6 +116,7 @@
             gap: 12px;
             cursor: pointer;
             border-bottom: 1px solid #f5f5f5;
+            position: relative;
         }
         .contact-item:hover, .user-item:hover { background: #f8f9fa; }
         .contact-item.active {
@@ -151,8 +142,12 @@
         .contact-status.offline { color: #999; }
         .contact-phone { font-size: 10px; color: #8dc63f; margin-top: 2px; }
         .contact-bio { font-size: 10px; color: #666; margin-top: 2px; }
-        .call-buttons { display: flex; gap: 8px; margin-left: auto; }
-        .call-btn {
+        .call-buttons, .contact-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+        .call-btn, .delete-contact-btn {
             background: none;
             border: none;
             cursor: pointer;
@@ -161,7 +156,8 @@
             border-radius: 50%;
             transition: background 0.2s;
         }
-        .call-btn:hover { background: #f0f0f0; }
+        .call-btn:hover, .delete-contact-btn:hover { background: #f0f0f0; }
+        .delete-contact-btn { color: #e74c3c; }
         .add-btn {
             background: #9b59b6;
             color: white;
@@ -340,10 +336,7 @@
             gap: 10px;
             margin: 15px 0;
         }
-        .modal-content .checkbox-row input {
-            width: auto;
-            margin: 0;
-        }
+        .modal-content .checkbox-row input { width: auto; margin: 0; }
         .modal-content button {
             padding: 10px 20px;
             margin: 10px 5px;
@@ -353,6 +346,22 @@
         }
         .save-btn { background: #8dc63f; color: white; }
         .cancel-btn { background: #e74c3c; color: white; }
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #8dc63f;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            z-index: 1000;
+            animation: fadeOut 3s forwards;
+        }
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; }
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -370,6 +379,8 @@
             let currentContact = null;
             let messagesSubscription = null;
             let isLoginMode = true;
+            let autoUpdateInterval = null;
+            let lastMessagesString = '';
             
             const countries = [
                 { code: "+7", name: "🇷🇺 Россия" },
@@ -403,6 +414,14 @@
             
             function saveSession(user) { localStorage.setItem('timate_user', JSON.stringify(user)); }
             function clearSession() { localStorage.removeItem('timate_user'); }
+            
+            function showNotification(msg) {
+                const notif = document.createElement('div');
+                notif.className = 'notification';
+                notif.textContent = msg;
+                document.body.appendChild(notif);
+                setTimeout(() => notif.remove(), 3000);
+            }
             
             async function showAuth() {
                 const countryOptions = countries.map(c => `<option value="${c.code}">${c.name} (${c.code})</option>`).join('');
@@ -481,6 +500,8 @@
             };
             
             async function loadMainScreen() {
+                if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+                
                 document.getElementById('app').innerHTML = `
                     <div class="timate-container">
                         <div class="sidebar">
@@ -509,7 +530,32 @@
                         <div class="chat-area" id="chatArea"><div class="empty-state">💬 Выберите контакт для общения</div></div>
                     </div>
                 `;
-                await loadContacts(); await loadAllUsers(); setupRealtime();
+                await loadContacts(); await loadAllUsers(); startAutoUpdate();
+            }
+            
+            function startAutoUpdate() {
+                if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+                autoUpdateInterval = setInterval(async () => {
+                    if (currentContact) {
+                        await checkForNewMessages();
+                    }
+                    await loadContacts(); // Обновляем статусы контактов
+                }, 2000);
+            }
+            
+            async function checkForNewMessages() {
+                if (!currentContact) return;
+                const { data: messages } = await supabaseClient.from('messages').select('*').or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${currentContact}),and(from_user_id.eq.${currentContact},to_user_id.eq.${currentUser.id})`).order('created_at');
+                const currentString = JSON.stringify(messages);
+                if (currentString !== lastMessagesString) {
+                    lastMessagesString = currentString;
+                    window.currentMessages = messages || [];
+                    await renderChat();
+                    // Отмечаем как прочитанные
+                    await supabaseClient.from('messages').update({ is_read: true }).eq('from_user_id', currentContact).eq('to_user_id', currentUser.id).eq('is_read', false);
+                    const container = document.getElementById('messagesContainer');
+                    if (container) container.scrollTop = container.scrollHeight;
+                }
             }
             
             window.openSettings = function() {
@@ -559,23 +605,14 @@
                 }
                 
                 const { error } = await supabaseClient.from('users').update({
-                    display_name: displayName,
-                    bio: bio,
-                    phone: newPhone,
-                    hide_phone: hidePhone,
-                    invisible_mode: invisibleMode,
-                    updated_at: new Date().toISOString()
+                    display_name: displayName, bio, phone: newPhone, hide_phone: hidePhone, invisible_mode: invisibleMode, updated_at: new Date().toISOString()
                 }).eq('id', currentUser.id);
                 
                 if (error) { alert('Ошибка: ' + error.message); return; }
                 
-                currentUser.display_name = displayName;
-                currentUser.bio = bio;
-                currentUser.phone = newPhone;
-                currentUser.hide_phone = hidePhone;
-                currentUser.invisible_mode = invisibleMode;
+                currentUser.display_name = displayName; currentUser.bio = bio; currentUser.phone = newPhone;
+                currentUser.hide_phone = hidePhone; currentUser.invisible_mode = invisibleMode;
                 saveSession(currentUser);
-                
                 document.querySelector('.modal')?.remove();
                 await loadMainScreen();
                 alert('✅ Настройки сохранены');
@@ -583,6 +620,7 @@
             
             window.logout = async function() {
                 if (currentUser) await supabaseClient.from('users').update({ status: 'offline', last_seen: new Date().toISOString() }).eq('id', currentUser.id);
+                if (autoUpdateInterval) clearInterval(autoUpdateInterval);
                 clearSession(); currentUser = null; currentContact = null;
                 if (messagesSubscription) messagesSubscription.unsubscribe();
                 showAuth();
@@ -602,7 +640,8 @@
                             ${!u.hide_phone && u.phone ? `<div class="contact-phone">${escapeHtml(u.phone)}</div>` : ''}
                             ${u.bio ? `<div class="contact-bio">${escapeHtml(u.bio.substring(0, 40))}</div>` : ''}
                         </div>
-                        <div class="call-buttons">
+                        <div class="contact-actions">
+                            <button class="delete-contact-btn" onclick="event.stopPropagation(); window.deleteContact('${u.id}')" title="Удалить контакт">🗑️</button>
                             <button class="call-btn" onclick="event.stopPropagation(); window.startCall('${u.id}', 'audio')">📞</button>
                             <button class="call-btn" onclick="event.stopPropagation(); window.startCall('${u.id}', 'video')">📹</button>
                         </div>
@@ -610,11 +649,21 @@
                 }).join('');
             }
             
+            window.deleteContact = async function(contactId) {
+                if (confirm('Удалить этот контакт?')) {
+                    await supabaseClient.from('contacts').delete().eq('user_id', currentUser.id).eq('contact_id', contactId);
+                    if (currentContact === contactId) {
+                        currentContact = null;
+                        document.getElementById('chatArea').innerHTML = '<div class="empty-state">💬 Выберите контакт для общения</div>';
+                    }
+                    await loadContacts();
+                    showNotification('🗑️ Контакт удалён');
+                }
+            };
+            
             async function loadAllUsers() {
                 let query = supabaseClient.from('users').select('*').neq('id', currentUser.id);
-                if (currentUser.invisible_mode) {
-                    query = query.eq('invisible_mode', false);
-                }
+                if (currentUser.invisible_mode) query = query.eq('invisible_mode', false);
                 const { data: users } = await query;
                 const container = document.getElementById('usersList');
                 if (!users?.length) { container.innerHTML = '<div class="empty-state">👥 Нет других пользователей</div>'; return; }
@@ -657,6 +706,7 @@
             
             window.addContact = async function(contactId) {
                 await supabaseClient.from('contacts').insert({ user_id: currentUser.id, contact_id: contactId });
+                showNotification('✅ Контакт добавлен');
                 await loadContacts(); await loadAllUsers();
                 const searchInput = document.getElementById('searchInput'); if (searchInput) searchInput.value = '';
             };
@@ -667,13 +717,13 @@
                 const activeEl = document.querySelector(`.contact-item[data-contact-id="${contactId}"]`);
                 if (activeEl) activeEl.classList.add('active');
                 await loadMessages(); await renderChat();
+                lastMessagesString = JSON.stringify(window.currentMessages);
             };
             
             async function loadMessages() {
                 if (!currentContact) return;
                 const { data: messages } = await supabaseClient.from('messages').select('*').or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${currentContact}),and(from_user_id.eq.${currentContact},to_user_id.eq.${currentUser.id})`).order('created_at');
                 window.currentMessages = messages || [];
-                await supabaseClient.from('messages').update({ is_read: true }).eq('from_user_id', currentContact).eq('to_user_id', currentUser.id).eq('is_read', false);
             }
             
             async function renderChat() {
@@ -721,19 +771,10 @@
                 await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, to_user_id: currentContact, content });
                 input.value = '';
                 await loadMessages(); await renderChat();
+                lastMessagesString = JSON.stringify(window.currentMessages);
             };
             
             window.startCall = function(contactId, type) { alert(`🔔 ${type === 'audio' ? 'Аудиозвонок' : 'Видеозвонок'}\n\n(Функция в разработке)`); };
-            
-            function setupRealtime() {
-                if (messagesSubscription) messagesSubscription.unsubscribe();
-                messagesSubscription = supabaseClient.channel('messages-channel').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, async (payload) => {
-                    const msg = payload.new;
-                    if ((msg.from_user_id === currentContact && msg.to_user_id === currentUser.id) || (msg.from_user_id === currentUser.id && msg.to_user_id === currentContact)) {
-                        await loadMessages(); await renderChat();
-                    }
-                }).subscribe();
-            }
             
             window.switchTab = function(tab) {
                 const contactsList = document.getElementById('contactsList');
