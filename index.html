@@ -54,6 +54,7 @@
             width: 48px;
             height: 48px;
             border-radius: 50%;
+            object-fit: cover;
             background: #9b59b6;
             display: flex;
             align-items: center;
@@ -62,6 +63,7 @@
             font-weight: bold;
             font-size: 20px;
         }
+        .user-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
         .user-info { flex: 1; }
         .user-name { font-weight: bold; color: #2c3e50; }
         .user-status { font-size: 12px; color: #2ecc71; }
@@ -139,6 +141,7 @@
             width: 44px;
             height: 44px;
             border-radius: 50%;
+            object-fit: cover;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -148,6 +151,7 @@
             flex-shrink: 0;
             background: #9b59b6;
         }
+        .contact-avatar img, .user-avatar-small img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
         .contact-avatar i, .user-avatar-small i, .chat-avatar i, .channel-avatar i { font-size: 20px; }
         .contact-info, .user-info-small, .chat-info { flex: 1; }
         .contact-name, .chat-name { font-weight: 600; color: #2c3e50; }
@@ -213,6 +217,7 @@
             width: 48px;
             height: 48px;
             border-radius: 50%;
+            object-fit: cover;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -220,6 +225,7 @@
             color: white;
             font-size: 24px;
         }
+        .chat-header-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
         .chat-header-info { flex: 1; }
         .chat-header-info h3 { color: #2c3e50; font-size: 18px; }
         .chat-header-info p { font-size: 12px; color: #2ecc71; }
@@ -407,6 +413,7 @@
         .privacy-link i { margin-right: 4px; }
         .privacy-link span { color: #9b59b6; text-decoration: underline; }
         .error { color: #e74c3c; font-size: 12px; margin-top: 10px; }
+        .loading { text-align: center; padding: 20px; color: #999; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -417,6 +424,10 @@
         (function() {
             const SUPABASE_URL = 'https://eiqtdlzsupmaaycwvjhp.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpcXRkbHpzdXBtYWF5Y3d2amhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MjgxOTAsImV4cCI6MjA5MDIwNDE5MH0.IHU21Y-pzzWEOQGU28UanSI0nrjGgstc45HWDRyGuIg';
+            
+            // Gemini API
+            const GEMINI_API_KEY = 'AIzaSyDGSiZNwy_RcOJGC_2RGPuxzn_KooymUUE';
+            const GEMINI_CHAT_ID = 'd02fc245-4556-4cd5-a9be-3c977f6f8dd0';
             
             const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             
@@ -430,6 +441,67 @@
             let activeTab = 'contacts';
             let isMainScreenLoaded = false;
             
+            // Функция для вызова Gemini API
+            async function callGemini(prompt) {
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }]
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                        return data.candidates[0].content.parts[0].text;
+                    }
+                    return 'Извините, не могу ответить на этот вопрос.';
+                } catch (error) {
+                    console.error('Gemini API error:', error);
+                    return 'Ошибка связи с нейросетью. Попробуйте позже.';
+                }
+            }
+            
+            // Создаём канал с нейросетью если его нет
+            async function createGeminiChannelIfNotExists() {
+                const { data: existing } = await supabaseClient
+                    .from('chats')
+                    .select('*')
+                    .eq('id', GEMINI_CHAT_ID)
+                    .single();
+                
+                if (!existing) {
+                    const { error } = await supabaseClient.from('chats').insert({
+                        id: GEMINI_CHAT_ID,
+                        name: 'Gemini AI',
+                        type: 'channel',
+                        is_private: false,
+                        description: 'Нейросеть Gemini от Google. Задавайте любые вопросы!',
+                        avatar_color: '#4285f4',
+                        created_by: currentUser?.id || '00000000-0000-0000-0000-000000000000'
+                    });
+                    if (error) console.error('Error creating Gemini channel:', error);
+                }
+            }
+            
+            // Функция для добавления пользователя в канал Gemini
+            async function addUserToGeminiChannel() {
+                const { data: existing } = await supabaseClient
+                    .from('chat_members')
+                    .select('*')
+                    .eq('chat_id', GEMINI_CHAT_ID)
+                    .eq('user_id', currentUser.id)
+                    .single();
+                
+                if (!existing) {
+                    await supabaseClient.from('chat_members').insert({
+                        chat_id: GEMINI_CHAT_ID,
+                        user_id: currentUser.id,
+                        role: 'member'
+                    });
+                }
+            }
+            
             const savedUser = localStorage.getItem('timate_user');
             if (savedUser) {
                 try {
@@ -437,6 +509,7 @@
                     if (user.id) {
                         currentUser = user;
                         supabaseClient.from('users').update({ status: 'online' }).eq('id', currentUser.id);
+                        createGeminiChannelIfNotExists().then(() => addUserToGeminiChannel());
                         loadMainScreen();
                     } else { showAuth(); }
                 } catch(e) { showAuth(); }
@@ -524,6 +597,8 @@
                 currentUser = user;
                 saveSession(currentUser);
                 await supabaseClient.from('users').update({ status: 'online' }).eq('id', currentUser.id);
+                await createGeminiChannelIfNotExists();
+                await addUserToGeminiChannel();
                 await loadMainScreen();
             };
             
@@ -573,11 +648,24 @@
                 if (existing) { document.getElementById('regError').textContent = '❌ Номер уже зарегистрирован'; return; }
                 const { data: newUser, error } = await supabaseClient.from('users').insert({
                     username, display_name: displayName, password, phone: fullPhone, bio,
-                    avatar_color: '#9b59b6', status: 'online', hide_phone: false, invisible_mode: false
+                    avatar_color: '#9b59b6', status: 'online', hide_phone: false, invisible_mode: false, avatar_url: null
                 }).select().single();
                 if (error) { document.getElementById('regError').textContent = '❌ Ошибка'; return; }
-                currentUser = newUser; saveSession(currentUser); await loadMainScreen();
+                currentUser = newUser; saveSession(currentUser);
+                await createGeminiChannelIfNotExists();
+                await addUserToGeminiChannel();
+                await loadMainScreen();
             };
+            
+            // Функция загрузки аватарки
+            async function uploadAvatar(file) {
+                if (!file) return;
+                const fileName = `${currentUser.id}_${Date.now()}.png`;
+                const { data, error } = await supabaseClient.storage.from('avatars').upload(fileName, file);
+                if (error) { console.error('Upload error:', error); return null; }
+                const { data: urlData } = supabaseClient.storage.from('avatars').getPublicUrl(fileName);
+                return urlData.publicUrl;
+            }
             
             async function loadMainScreen() {
                 if (isMainScreenLoaded) return;
@@ -585,12 +673,16 @@
                 
                 if (autoUpdateInterval) clearInterval(autoUpdateInterval);
                 
+                const avatarUrl = currentUser.avatar_url || '';
+                const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="avatar">` : `<i class="fas fa-user"></i>`;
+                
                 document.getElementById('app').innerHTML = `
                     <div class="timate-container">
                         <div class="sidebar">
                             <div class="sidebar-header"><h2><i class="fas fa-comment"></i> Timate</h2><p><i class="fas fa-leaf"></i> свободное общение</p></div>
                             <div class="current-user">
-                                <div class="user-avatar">${(currentUser.display_name || currentUser.username).charAt(0).toUpperCase()}</div>
+                                <div class="user-avatar" onclick="document.getElementById('avatarInput').click()" style="cursor:pointer;">${avatarHtml}</div>
+                                <input type="file" id="avatarInput" style="display:none;" accept="image/*" onchange="uploadNewAvatar(this)">
                                 <div class="user-info">
                                     <div class="user-name">${escapeHtml(currentUser.display_name || currentUser.username)}</div>
                                     <div class="user-status"><i class="fas fa-circle"></i> онлайн</div>
@@ -625,7 +717,6 @@
                 await loadMyChats(); 
                 await loadPublicChannels();
                 
-                // Показываем активную вкладку
                 document.getElementById('contactsList').style.display = activeTab === 'contacts' ? 'block' : 'none';
                 document.getElementById('usersList').style.display = activeTab === 'users' ? 'block' : 'none';
                 document.getElementById('chatsList').style.display = activeTab === 'chats' ? 'block' : 'none';
@@ -634,6 +725,21 @@
                 startAutoUpdate();
             }
             
+            window.uploadNewAvatar = async function(input) {
+                if (input.files && input.files[0]) {
+                    const url = await uploadAvatar(input.files[0]);
+                    if (url) {
+                        const { error } = await supabaseClient.from('users').update({ avatar_url: url }).eq('id', currentUser.id);
+                        if (!error) {
+                            currentUser.avatar_url = url;
+                            saveSession(currentUser);
+                            showNotification('Аватар обновлён');
+                            await loadMainScreen();
+                        }
+                    }
+                }
+            };
+            
             async function loadContacts() {
                 const { data: contacts } = await supabaseClient.from('contacts').select(`contact_id, nickname, users:contact_id(*)`).eq('user_id', currentUser.id);
                 const container = document.getElementById('contactsList');
@@ -641,8 +747,9 @@
                 if (!contacts?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-address-book"></i>Нет контактов</div>'; return; }
                 container.innerHTML = contacts.map(c => {
                     const u = c.users;
+                    const avatarHtml = u.avatar_url ? `<img src="${u.avatar_url}" alt="avatar">` : `<i class="fas fa-user"></i>`;
                     return `<div class="contact-item" onclick="selectContact('${u.id}')" data-contact-id="${u.id}">
-                        <div class="contact-avatar" style="background: ${u.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
+                        <div class="contact-avatar" style="background: ${u.avatar_color || '#9b59b6'}">${avatarHtml}</div>
                         <div class="contact-info">
                             <div class="contact-name">${escapeHtml(c.nickname || u.display_name || u.username)}</div>
                             <div class="contact-status ${u.status === 'online' ? 'online' : 'offline'}"><i class="fas fa-circle"></i> ${u.status === 'online' ? 'онлайн' : 'офлайн'}</div>
@@ -675,26 +782,43 @@
                 if (!users?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-globe"></i>Нет пользователей</div>'; return; }
                 const { data: contacts } = await supabaseClient.from('contacts').select('contact_id').eq('user_id', currentUser.id);
                 const contactIds = new Set(contacts?.map(c => c.contact_id) || []);
-                container.innerHTML = users.map(u => `
-                    <div class="user-item">
-                        <div class="user-avatar-small" style="background: ${u.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
+                container.innerHTML = users.map(u => {
+                    const avatarHtml = u.avatar_url ? `<img src="${u.avatar_url}" alt="avatar">` : `<i class="fas fa-user"></i>`;
+                    return `<div class="user-item">
+                        <div class="user-avatar-small" style="background: ${u.avatar_color || '#9b59b6'}">${avatarHtml}</div>
                         <div class="user-info-small">
                             <div class="contact-name">${escapeHtml(u.display_name || u.username)}</div>
                             ${!u.hide_phone && u.phone ? `<div><i class="fas fa-phone"></i> ${escapeHtml(u.phone)}</div>` : ''}
                             ${u.bio ? `<div style="font-size:10px;color:#666;"><i class="fas fa-quote-left"></i> ${escapeHtml(u.bio.substring(0, 40))}</div>` : ''}
                         </div>
-                        ${!contactIds.has(u.id) ? `<button class="add-btn" onclick="addContact('${u.id}')"><i class="fas fa-user-plus"></i> Добавить</button>` : '<span style="color:#8dc63f;"><i class="fas fa-check"></i> в контактах</span>'}
-                    </div>
-                `).join('');
+                        ${!contactIds.has(u.id) ? `<button class="add-btn" onclick="showAddContactModal('${u.id}', '${escapeHtml(u.display_name || u.username)}')"><i class="fas fa-user-plus"></i> Добавить</button>` : '<span style="color:#8dc63f;"><i class="fas fa-check"></i> в контактах</span>'}
+                    </div>`;
+                }).join('');
             }
             
-            window.addContact = async function(contactId) {
-                await supabaseClient.from('contacts').insert({ user_id: currentUser.id, contact_id: contactId });
+            window.showAddContactModal = function(userId, userName) {
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h3><i class="fas fa-user-plus"></i> Добавить контакт</h3>
+                        <p>Вы хотите добавить <strong>${escapeHtml(userName)}</strong> в свой список контактов?</p>
+                        <div class="checkbox-row">
+                            <input type="text" id="contactNickname" placeholder="Прозвище (необязательно)">
+                        </div>
+                        <button class="save-btn" onclick="window.confirmAddContact('${userId}', document.getElementById('contactNickname').value)"><i class="fas fa-check"></i> Добавить</button>
+                        <button class="cancel-btn" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i> Отмена</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            };
+            
+            window.confirmAddContact = async function(userId, nickname) {
+                await supabaseClient.from('contacts').insert({ user_id: currentUser.id, contact_id: userId, nickname: nickname || null });
                 showNotification('Контакт добавлен');
+                document.querySelector('.modal')?.remove();
                 await loadContacts(); 
                 await loadAllUsers();
-                const searchInput = document.getElementById('searchInput');
-                if (searchInput) searchInput.value = '';
             };
             
             async function loadMyChats() {
@@ -784,9 +908,10 @@
                 const { data: contact } = await supabaseClient.from('users').select('*').eq('id', contactId).single();
                 const chatArea = document.getElementById('chatArea');
                 const messages = window.currentMessages || [];
+                const avatarHtml = contact?.avatar_url ? `<img src="${contact.avatar_url}" alt="avatar">` : `<i class="fas fa-user"></i>`;
                 chatArea.innerHTML = `
                     <div class="chat-header">
-                        <div class="chat-header-avatar" style="background: ${contact?.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
+                        <div class="chat-header-avatar" style="background: ${contact?.avatar_color || '#9b59b6'}">${avatarHtml}</div>
                         <div class="chat-header-info">
                             <h3>${escapeHtml(contact?.display_name || contact?.username)}</h3>
                             <p><i class="fas fa-circle"></i> ${contact?.status === 'online' ? 'онлайн' : 'офлайн'}</p>
@@ -822,11 +947,15 @@
                 const chatArea = document.getElementById('chatArea');
                 const messages = window.currentMessages || [];
                 const typeIcon = chat.type === 'group' ? '<i class="fas fa-users"></i>' : '<i class="fas fa-broadcast-tower"></i>';
+                
+                // Специальная обработка для канала Gemini
+                const isGeminiChannel = chat.id === GEMINI_CHAT_ID;
+                
                 chatArea.innerHTML = `
                     <div class="chat-header">
                         <div class="chat-header-avatar" style="background: ${chat.avatar_color || '#8dc63f'}">${typeIcon}</div>
                         <div class="chat-header-info">
-                            <h3>${escapeHtml(chat.name)}</h3>
+                            <h3>${escapeHtml(chat.name)} ${isGeminiChannel ? '<span style="font-size:12px;color:#4285f4;">🤖 AI</span>' : ''}</h3>
                             <p><i class="fas fa-circle"></i> ${chat.type === 'group' ? 'Группа' : (chat.is_private ? 'Приватный канал' : 'Публичный канал')}</p>
                             ${chat.description ? `<div class="bio"><i class="fas fa-info-circle"></i> ${escapeHtml(chat.description)}</div>` : ''}
                         </div>
@@ -846,13 +975,66 @@
                         `).join('')}
                     </div>
                     <div class="input-area">
-                        <input type="text" id="messageInput" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendGroupMessage()">
+                        <input type="text" id="messageInput" placeholder="${isGeminiChannel ? 'Задайте вопрос нейросети Gemini...' : 'Сообщение...'}" onkeypress="if(event.key==='Enter') sendGroupMessage()">
                         <button onclick="sendGroupMessage()"><i class="fas fa-paper-plane"></i> Отправить</button>
                     </div>
                 `;
                 const container = document.getElementById('messagesContainer');
                 if (container) container.scrollTop = container.scrollHeight;
             }
+            
+            window.sendPrivateMessage = async function() {
+                const input = document.getElementById('messageInput');
+                const content = input.value.trim();
+                if (!content || !currentContact) return;
+                await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, to_user_id: currentContact, content });
+                input.value = '';
+                await loadPrivateMessages(currentContact);
+                await renderPrivateChat(currentContact);
+                lastMessagesString = JSON.stringify(window.currentMessages);
+            };
+            
+            window.sendGroupMessage = async function() {
+                const input = document.getElementById('messageInput');
+                const content = input.value.trim();
+                if (!content || !currentChat) return;
+                
+                // Если это канал Gemini, вызываем нейросеть
+                const isGeminiChannel = currentChat === GEMINI_CHAT_ID;
+                
+                // Сохраняем сообщение пользователя
+                await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, chat_id: currentChat, content });
+                
+                // Показываем индикатор загрузки
+                const messagesContainer = document.getElementById('messagesContainer');
+                const loadingId = Date.now();
+                const loadingMsg = document.createElement('div');
+                loadingMsg.id = `loading-${loadingId}`;
+                loadingMsg.className = 'message in';
+                loadingMsg.innerHTML = `<div class="message-bubble"><div class="message-text"><i class="fas fa-spinner fa-pulse"></i> Gemini думает...</div></div>`;
+                messagesContainer.appendChild(loadingMsg);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
+                if (isGeminiChannel) {
+                    // Получаем ответ от Gemini
+                    const response = await callGemini(content);
+                    
+                    // Удаляем индикатор загрузки
+                    document.getElementById(`loading-${loadingId}`)?.remove();
+                    
+                    // Сохраняем ответ Gemini
+                    await supabaseClient.from('messages').insert({ 
+                        from_user_id: '00000000-0000-0000-0000-000000000000', 
+                        chat_id: currentChat, 
+                        content: response 
+                    });
+                }
+                
+                input.value = '';
+                await loadGroupMessages(currentChat);
+                await renderGroupChat(currentChat);
+                lastMessagesString = JSON.stringify(window.currentMessages);
+            };
             
             window.inviteToChannelModal = function(chatId) {
                 const username = prompt('Введите имя пользователя для приглашения:');
@@ -874,28 +1056,6 @@
                     if (!error) showNotification('Приглашение отправлено');
                     else showNotification('Ошибка: возможно, пользователь уже в канале');
                 }
-            };
-            
-            window.sendPrivateMessage = async function() {
-                const input = document.getElementById('messageInput');
-                const content = input.value.trim();
-                if (!content || !currentContact) return;
-                await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, to_user_id: currentContact, content });
-                input.value = '';
-                await loadPrivateMessages(currentContact);
-                await renderPrivateChat(currentContact);
-                lastMessagesString = JSON.stringify(window.currentMessages);
-            };
-            
-            window.sendGroupMessage = async function() {
-                const input = document.getElementById('messageInput');
-                const content = input.value.trim();
-                if (!content || !currentChat) return;
-                await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, chat_id: currentChat, content });
-                input.value = '';
-                await loadGroupMessages(currentChat);
-                await renderGroupChat(currentChat);
-                lastMessagesString = JSON.stringify(window.currentMessages);
             };
             
             window.showCreateChatModal = function() {
@@ -974,16 +1134,17 @@
                     if (!users?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i>Ничего не найдено</div>'; return; }
                     const { data: contacts } = await supabaseClient.from('contacts').select('contact_id').eq('user_id', currentUser.id);
                     const contactIds = new Set(contacts?.map(c => c.contact_id) || []);
-                    container.innerHTML = users.map(u => `
-                        <div class="user-item">
-                            <div class="user-avatar-small" style="background: ${u.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
+                    container.innerHTML = users.map(u => {
+                        const avatarHtml = u.avatar_url ? `<img src="${u.avatar_url}" alt="avatar">` : `<i class="fas fa-user"></i>`;
+                        return `<div class="user-item">
+                            <div class="user-avatar-small" style="background: ${u.avatar_color || '#9b59b6'}">${avatarHtml}</div>
                             <div class="user-info-small">
                                 <div class="contact-name">${escapeHtml(u.display_name || u.username)}</div>
                                 ${!u.hide_phone && u.phone ? `<div><i class="fas fa-phone"></i> ${escapeHtml(u.phone)}</div>` : ''}
                             </div>
-                            ${!contactIds.has(u.id) ? `<button class="add-btn" onclick="addContact('${u.id}')"><i class="fas fa-user-plus"></i> Добавить</button>` : '<span><i class="fas fa-check"></i> в контактах</span>'}
-                        </div>
-                    `).join('');
+                            ${!contactIds.has(u.id) ? `<button class="add-btn" onclick="showAddContactModal('${u.id}', '${escapeHtml(u.display_name || u.username)}')"><i class="fas fa-user-plus"></i> Добавить</button>` : '<span><i class="fas fa-check"></i> в контактах</span>'}
+                        </div>`;
+                    }).join('');
                 } else if (activeTab === 'contacts') {
                     if (!query) { loadContacts(); return; }
                     const { data: contacts } = await supabaseClient.from('contacts').select(`contact_id, nickname, users:contact_id(*)`).eq('user_id', currentUser.id);
@@ -993,8 +1154,9 @@
                     if (!filtered.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i>Ничего не найдено</div>'; return; }
                     container.innerHTML = filtered.map(c => {
                         const u = c.users;
+                        const avatarHtml = u.avatar_url ? `<img src="${u.avatar_url}" alt="avatar">` : `<i class="fas fa-user"></i>`;
                         return `<div class="contact-item" onclick="selectContact('${u.id}')" data-contact-id="${u.id}">
-                            <div class="contact-avatar" style="background: ${u.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
+                            <div class="contact-avatar" style="background: ${u.avatar_color || '#9b59b6'}">${avatarHtml}</div>
                             <div class="contact-info"><div class="contact-name">${escapeHtml(c.nickname || u.display_name || u.username)}</div></div>
                         </div>`;
                     }).join('');
