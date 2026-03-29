@@ -264,7 +264,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s;
         }
+        .voice-play-btn:hover { background: rgba(0,0,0,0.2); }
         .voice-wave {
             flex: 1;
             height: 40px;
@@ -313,6 +315,7 @@
             color: white;
             border: none;
             cursor: pointer;
+            transition: all 0.2s;
         }
         .voice-record-btn.recording {
             background: #c0392b;
@@ -1097,42 +1100,37 @@
                 lastMessagesMap.set(`group_${currentChat}`, JSON.stringify(window.currentMessages));
             };
             
-window.playVoiceMessage = async function(audioUrl) {
-    console.log('🎵 Попытка воспроизвести:', audioUrl);
-    
-    if (currentAudio) {
-        currentAudio.pause();
-        currentAudio = null;
-    }
-    
-    try {
-        // Пробуем fetch с проверкой доступности
-        const response = await fetch(audioUrl, { method: 'HEAD' });
-        if (!response.ok) {
-            console.error('❌ Аудио не доступно:', response.status);
-            showNotification('❌ Аудиофайл не найден');
-            return;
-        }
-        
-        const audio = new Audio(audioUrl);
-        currentAudio = audio;
-        
-        audio.onplay = () => console.log('✅ Воспроизведение началось');
-        audio.onerror = (e) => {
-            console.error('❌ Ошибка воспроизведения:', e);
-            showNotification('❌ Не удалось воспроизвести голосовое');
-        };
-        audio.onended = () => {
-            console.log('⏹️ Воспроизведение завершено');
-            currentAudio = null;
-        };
-        
-        await audio.play();
-    } catch (e) {
-        console.error('❌ Ошибка:', e);
-        showNotification('❌ Ошибка воспроизведения');
-    }
-};
+            // ИСПРАВЛЕННАЯ ФУНКЦИЯ ВОСПРОИЗВЕДЕНИЯ
+            window.playVoiceMessage = function(audioUrl) {
+                console.log('🎵 Воспроизведение:', audioUrl);
+                
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio = null;
+                }
+                
+                const audio = new Audio();
+                audio.src = audioUrl;
+                audio.controls = false;
+                
+                audio.oncanplay = () => {
+                    console.log('✅ Аудио загружено, воспроизводим');
+                    audio.play().catch(e => console.error('Play error:', e));
+                };
+                
+                audio.onerror = (e) => {
+                    console.error('❌ Ошибка загрузки аудио:', e);
+                    showNotification('❌ Не удалось загрузить аудио');
+                };
+                
+                audio.onended = () => {
+                    console.log('⏹️ Воспроизведение завершено');
+                    currentAudio = null;
+                };
+                
+                currentAudio = audio;
+                audio.load();
+            };
             
             window.showCreateChatModal = function() {
                 const modal = document.createElement('div');
