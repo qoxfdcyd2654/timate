@@ -1097,13 +1097,42 @@
                 lastMessagesMap.set(`group_${currentChat}`, JSON.stringify(window.currentMessages));
             };
             
-            window.playVoiceMessage = function(audioUrl) {
-                if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-                const audio = new Audio(audioUrl);
-                currentAudio = audio;
-                audio.play();
-                audio.onended = () => { currentAudio = null; };
-            };
+window.playVoiceMessage = async function(audioUrl) {
+    console.log('🎵 Попытка воспроизвести:', audioUrl);
+    
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+    }
+    
+    try {
+        // Пробуем fetch с проверкой доступности
+        const response = await fetch(audioUrl, { method: 'HEAD' });
+        if (!response.ok) {
+            console.error('❌ Аудио не доступно:', response.status);
+            showNotification('❌ Аудиофайл не найден');
+            return;
+        }
+        
+        const audio = new Audio(audioUrl);
+        currentAudio = audio;
+        
+        audio.onplay = () => console.log('✅ Воспроизведение началось');
+        audio.onerror = (e) => {
+            console.error('❌ Ошибка воспроизведения:', e);
+            showNotification('❌ Не удалось воспроизвести голосовое');
+        };
+        audio.onended = () => {
+            console.log('⏹️ Воспроизведение завершено');
+            currentAudio = null;
+        };
+        
+        await audio.play();
+    } catch (e) {
+        console.error('❌ Ошибка:', e);
+        showNotification('❌ Ошибка воспроизведения');
+    }
+};
             
             window.showCreateChatModal = function() {
                 const modal = document.createElement('div');
