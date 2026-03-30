@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Timate</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -14,26 +14,90 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
         .timate-container {
-            width: 1200px;
-            max-width: 95%;
-            height: 90vh;
+            width: 100%;
+            max-width: 1200px;
+            height: 100vh;
+            max-height: 100vh;
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
             display: flex;
             overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
+        /* Десктопная версия */
         .sidebar {
             width: 320px;
             background: rgba(255, 255, 255, 0.95);
             display: flex;
             flex-direction: column;
             border-right: 1px solid rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
         }
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            transition: transform 0.3s ease;
+        }
+        
+        /* Мобильная версия */
+        @media (max-width: 768px) {
+            .timate-container {
+                width: 100%;
+                border-radius: 0;
+            }
+            .sidebar {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 10;
+                transform: translateX(0);
+            }
+            .sidebar.hide {
+                transform: translateX(-100%);
+            }
+            .chat-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 5;
+                transform: translateX(100%);
+            }
+            .chat-area.show {
+                transform: translateX(0);
+                z-index: 15;
+            }
+            .mobile-back-btn {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                background: none;
+                border: none;
+                font-size: 20px;
+                color: #9b59b6;
+                cursor: pointer;
+                margin-right: 8px;
+            }
+            .chat-header {
+                padding-left: 12px !important;
+            }
+        }
+        @media (min-width: 769px) {
+            .mobile-back-btn {
+                display: none !important;
+            }
+        }
+        
         .sidebar-header {
             background: #8dc63f;
             padding: 20px;
@@ -64,14 +128,15 @@
             font-size: 20px;
             cursor: pointer;
             overflow: hidden;
+            flex-shrink: 0;
         }
         .user-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .user-info { flex: 1; }
-        .user-name { font-weight: bold; color: #2c3e50; }
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { font-weight: bold; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .user-status {
             font-size: 12px;
             display: flex;
@@ -81,8 +146,8 @@
         .user-status.online { color: #2ecc71; }
         .user-status.offline { color: #999; }
         .user-status i { font-size: 8px; }
-        .user-phone { font-size: 10px; color: #999; margin-top: 2px; }
-        .user-bio { font-size: 11px; color: #666; margin-top: 2px; font-style: italic; }
+        .user-phone { font-size: 10px; color: #999; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-bio { font-size: 11px; color: #666; margin-top: 2px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .settings-btn, .logout-btn {
             background: none;
             border: none;
@@ -92,6 +157,7 @@
             border-radius: 50%;
             transition: background 0.2s;
             color: #666;
+            flex-shrink: 0;
         }
         .settings-btn:hover, .logout-btn:hover { background: #f0f0f0; }
         .search-box { padding: 15px; border-bottom: 1px solid #eee; position: relative; }
@@ -169,8 +235,8 @@
             height: 100%;
             object-fit: cover;
         }
-        .contact-info, .user-info-small, .chat-info { flex: 1; }
-        .contact-name, .chat-name { font-weight: 600; color: #2c3e50; }
+        .contact-info, .user-info-small, .chat-info { flex: 1; min-width: 0; }
+        .contact-name, .chat-name { font-weight: 600; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .contact-status {
             font-size: 11px;
             display: flex;
@@ -184,6 +250,7 @@
             display: flex;
             gap: 8px;
             margin-left: auto;
+            flex-shrink: 0;
         }
         .call-btn, .delete-contact-btn {
             background: none;
@@ -205,6 +272,7 @@
             border-radius: 20px;
             cursor: pointer;
             font-size: 12px;
+            flex-shrink: 0;
         }
         .create-chat-btn {
             margin: 10px;
@@ -217,12 +285,6 @@
             font-weight: 600;
         }
         .create-chat-btn i { margin-right: 8px; }
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: white;
-        }
         .chat-header {
             padding: 15px 20px;
             background: white;
@@ -243,14 +305,15 @@
             color: white;
             font-size: 24px;
             overflow: hidden;
+            flex-shrink: 0;
         }
         .chat-header-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .chat-header-info { flex: 1; }
-        .chat-header-info h3 { color: #2c3e50; font-size: 18px; }
+        .chat-header-info { flex: 1; min-width: 0; }
+        .chat-header-info h3 { color: #2c3e50; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .chat-header-info p {
             font-size: 12px;
             display: flex;
@@ -314,7 +377,6 @@
             justify-content: center;
             transition: all 0.2s;
         }
-        .voice-play-btn:hover { background: rgba(0,0,0,0.2); }
         .voice-wave {
             flex: 1;
             height: 40px;
@@ -363,7 +425,7 @@
             color: white;
             border: none;
             cursor: pointer;
-            transition: all 0.2s;
+            flex-shrink: 0;
         }
         .voice-record-btn.recording {
             background: #c0392b;
@@ -382,6 +444,7 @@
             border-radius: 25px;
             cursor: pointer;
             font-weight: 600;
+            flex-shrink: 0;
         }
         .modal {
             position: fixed;
@@ -405,7 +468,6 @@
             overflow-y: auto;
         }
         .modal-content h3 { margin-bottom: 20px; color: #8dc63f; }
-        .modal-content h3 i { margin-right: 8px; }
         .modal-content input, .modal-content select, .modal-content textarea {
             width: 100%;
             padding: 12px;
@@ -429,7 +491,6 @@
         }
         .save-btn { background: #8dc63f; color: white; }
         .cancel-btn { background: #e74c3c; color: white; }
-        .accept-btn { background: #9b59b6; color: white; }
         .empty-state { text-align: center; padding: 30px; color: #999; }
         .empty-state i { font-size: 48px; margin-bottom: 15px; display: block; color: #ccc; }
         .notification {
@@ -450,6 +511,7 @@
         }
         .login-screen {
             width: 450px;
+            max-width: 90%;
             background: rgba(255,255,255,0.98);
             border-radius: 28px;
             padding: 40px;
@@ -484,8 +546,6 @@
             margin-top: 15px;
             cursor: pointer;
         }
-        .privacy-link i { margin-right: 4px; }
-        .privacy-link span { color: #9b59b6; text-decoration: underline; }
         .error { color: #e74c3c; font-size: 12px; margin-top: 10px; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -514,6 +574,31 @@
             let currentAudio = null;
             let privacyAccepted = localStorage.getItem('privacy_accepted') === 'true';
             let activeTab = 'contacts';
+            
+            // Мобильная навигация
+            let isMobile = window.innerWidth <= 768;
+            
+            function showChat() {
+                if (isMobile) {
+                    document.querySelector('.sidebar')?.classList.add('hide');
+                    document.querySelector('.chat-area')?.classList.add('show');
+                }
+            }
+            
+            function showContacts() {
+                if (isMobile) {
+                    document.querySelector('.sidebar')?.classList.remove('hide');
+                    document.querySelector('.chat-area')?.classList.remove('show');
+                }
+            }
+            
+            window.addEventListener('resize', () => {
+                isMobile = window.innerWidth <= 768;
+                if (!isMobile) {
+                    document.querySelector('.sidebar')?.classList.remove('hide');
+                    document.querySelector('.chat-area')?.classList.remove('show');
+                }
+            });
             
             let recognition = null;
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -565,7 +650,6 @@
                 try { new Notification(title, { body: body, silent: false }); } catch(e) {}
             }
             
-            // Функция сжатия изображения (уменьшение размера картинки, не байтов)
             async function compressImage(file) {
                 return new Promise((resolve, reject) => {
                     const img = new Image();
@@ -1015,10 +1099,11 @@
                 await renderChat(contactId);
                 lastMessagesMap.set(`private_${contactId}`, JSON.stringify(window.currentMessages));
                 
-                // Отмечаем все непрочитанные сообщения от этого контакта как прочитанные
                 await supabaseClient.from('messages').update({ read_at: new Date().toISOString() }).eq('from_user_id', contactId).eq('to_user_id', currentUser.id).is('read_at', null);
                 await loadMessages(contactId);
                 await renderChat(contactId);
+                
+                showChat();
             };
             
             window.selectChat = async function(chatId, type) {
@@ -1031,6 +1116,7 @@
                 await loadGroupMessages(chatId);
                 await renderGroupChat(chatId);
                 lastMessagesMap.set(`group_${chatId}`, JSON.stringify(window.currentMessages));
+                showChat();
             };
             
             async function loadMessages(contactId) {
@@ -1068,6 +1154,7 @@
                 
                 chatArea.innerHTML = `
                     <div class="chat-header">
+                        <button class="mobile-back-btn" onclick="showContacts()"><i class="fas fa-arrow-left"></i></button>
                         <div class="chat-header-avatar" style="background: ${contact?.avatar_color || '#9b59b6'}">${avatarHtml}</div>
                         <div class="chat-header-info">
                             <h3>${escapeHtml(contact?.display_name || contact?.username)}</h3>
@@ -1125,6 +1212,7 @@
                 
                 chatArea.innerHTML = `
                     <div class="chat-header">
+                        <button class="mobile-back-btn" onclick="showContacts()"><i class="fas fa-arrow-left"></i></button>
                         <div class="chat-header-avatar" style="background: ${chat.avatar_color || '#8dc63f'}"><i class="fas ${chat.type === 'group' ? 'fa-users' : 'fa-broadcast-tower'}"></i></div>
                         <div class="chat-header-info">
                             <h3>${escapeHtml(chat.name)}</h3>
@@ -1165,7 +1253,7 @@
                 const input = document.getElementById('messageInput');
                 const content = input.value.trim();
                 if (!content || !currentContact) return;
-                const { error } = await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, to_user_id: currentContact, content, delivered: true });
+                await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, to_user_id: currentContact, content, delivered: true });
                 input.value = '';
                 await loadMessages(currentContact);
                 await renderChat(currentContact);
@@ -1293,7 +1381,6 @@
                 modal.innerHTML = `
                     <div class="modal-content">
                         <h3><i class="fas fa-cog"></i> Настройки профиля</h3>
-                        
                         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
                             <div class="user-avatar" style="width: 64px; height: 64px; cursor: pointer;" id="settingsAvatar" onclick="document.getElementById('settingsAvatarInput').click()">
                                 ${currentUser.avatar_url ? `<img src="${currentUser.avatar_url}">` : `<i class="fas fa-user"></i>`}
@@ -1306,10 +1393,8 @@
                             </div>
                             <input type="file" id="settingsAvatarInput" style="display:none;" accept="image/*" onchange="changeAvatarFromSettings(this)">
                         </div>
-                        
                         <input type="text" id="settingsDisplayName" placeholder="Отображаемое имя" value="${escapeHtml(currentUser.display_name || '')}">
                         <textarea id="settingsBio" rows="3" placeholder="О себе">${escapeHtml(currentUser.bio || '')}</textarea>
-                        
                         <div class="phone-row">
                             <select id="settingsCountryCode">
                                 <option value="+7" ${currentUser.phone?.startsWith('+7') ? 'selected' : ''}>🇷🇺 Россия (+7)</option>
@@ -1323,20 +1408,18 @@
                             </select>
                             <input type="tel" id="settingsPhone" placeholder="Номер телефона" value="${currentUser.phone ? currentUser.phone.replace(/^\+?\d+/, '') : ''}">
                         </div>
-                        
                         <div class="checkbox-row">
                             <input type="checkbox" id="settingsHidePhone" ${currentUser.hide_phone ? 'checked' : ''}>
                             <label><i class="fas fa-eye-slash"></i> Скрыть номер телефона</label>
                         </div>
                         <div class="checkbox-row">
                             <input type="checkbox" id="settingsInvisibleMode" ${currentUser.invisible_mode ? 'checked' : ''}>
-                            <label><i class="fas fa-user-secret"></i> Невидимый режим (не отображаться в списке пользователей)</label>
+                            <label><i class="fas fa-user-secret"></i> Невидимый режим</label>
                         </div>
                         <div class="checkbox-row">
                             <input type="checkbox" id="settingsNotifications" ${notificationsEnabled ? 'checked' : ''}>
                             <label><i class="fas fa-bell"></i> Включить уведомления</label>
                         </div>
-                        
                         <button class="save-btn" onclick="saveSettings()"><i class="fas fa-save"></i> Сохранить</button>
                         <button class="cancel-btn" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i> Отмена</button>
                     </div>
@@ -1349,24 +1432,17 @@
                     const file = input.files[0];
                     if (file.size > 10 * 1024 * 1024) { showNotification('❌ Файл слишком большой (макс 10MB)'); return; }
                     if (!file.type.startsWith('image/')) { showNotification('❌ Можно загружать только изображения'); return; }
-                    
                     showNotification('🖼️ Обработка изображения...');
                     const url = await uploadAvatar(file);
                     if (url) {
                         await supabaseClient.from('users').update({ avatar_url: url }).eq('id', currentUser.id);
                         currentUser.avatar_url = url;
                         saveSession(currentUser);
-                        
                         const avatarDiv = document.getElementById('settingsAvatar');
-                        if (avatarDiv) {
-                            avatarDiv.innerHTML = `<img src="${url}">`;
-                        }
-                        
+                        if (avatarDiv) avatarDiv.innerHTML = `<img src="${url}">`;
                         showNotification('✅ Аватар обновлён');
                         await loadMainScreen();
-                    } else {
-                        showNotification('❌ Ошибка загрузки аватара');
-                    }
+                    } else { showNotification('❌ Ошибка загрузки аватара'); }
                 }
             };
             
@@ -1377,9 +1453,7 @@
                 const hidePhone = document.getElementById('settingsHidePhone').checked;
                 const invisibleMode = document.getElementById('settingsInvisibleMode').checked;
                 const enableNotifications = document.getElementById('settingsNotifications').checked;
-                
                 if (!displayName) { alert('Введите отображаемое имя'); return; }
-                
                 const phoneDigits = phoneNumber.replace(/[^0-9]/g, '');
                 let newPhone = currentUser.phone;
                 if (phoneDigits) {
@@ -1388,27 +1462,15 @@
                     const { data: existing } = await supabaseClient.from('users').select('*').eq('phone', newPhone).neq('id', currentUser.id).single();
                     if (existing) { alert('Номер уже используется'); return; }
                 }
-                
                 const { error } = await supabaseClient.from('users').update({
-                    display_name: displayName,
-                    bio: bio,
-                    phone: newPhone,
-                    hide_phone: hidePhone,
-                    invisible_mode: invisibleMode
+                    display_name: displayName, bio, phone: newPhone, hide_phone: hidePhone, invisible_mode: invisibleMode
                 }).eq('id', currentUser.id);
-                
                 if (error) { alert('Ошибка'); return; }
-                
-                currentUser.display_name = displayName;
-                currentUser.bio = bio;
-                currentUser.phone = newPhone;
-                currentUser.hide_phone = hidePhone;
-                currentUser.invisible_mode = invisibleMode;
+                currentUser.display_name = displayName; currentUser.bio = bio; currentUser.phone = newPhone;
+                currentUser.hide_phone = hidePhone; currentUser.invisible_mode = invisibleMode;
                 saveSession(currentUser);
-                
                 if (enableNotifications && !notificationsEnabled) await requestNotificationPermission();
                 else if (!enableNotifications && notificationsEnabled) notificationsEnabled = false;
-                
                 document.querySelector('.modal')?.remove();
                 await loadMainScreen();
                 showNotification('✅ Профиль обновлён');
