@@ -928,13 +928,69 @@
                 showNotification('✅ Регистрация успешна! Добро пожаловать в Timate!');
             };
             
-            async function uploadAvatar(file) {
-                const fileName = `${currentUser.id}_${Date.now()}.png`;
-                const { error } = await supabaseClient.storage.from('avatars').upload(fileName, file);
-                if (error) return null;
-                const { data: urlData } = supabaseClient.storage.from('avatars').getPublicUrl(fileName);
-                return urlData.publicUrl;
+async function uploadAvatar(file) {
+    return new Promise((resolve, reject) => {
+        // Создаём Image объект для сжатия
+        const img = new Image();
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+            img.src = e.target.result;
+        };
+        
+        img.onload = async () => {
+            // Максимальный размер аватарки 200x200
+            const maxSize = 200;
+            let width = img.width;
+            let height = img.height;
+            
+            // Вычисляем новые размеры с сохранением пропорций
+            if (width > height) {
+                if (width > maxSize) {
+                    height = Math.round((height * maxSize) / width);
+                    width = maxSize;
+                }
+            } else {
+                if (height > maxSize) {
+                    width = Math.round((width * maxSize) / height);
+                    height = maxSize;
+                }
             }
+            
+            // Создаём canvas для сжатия
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Конвертируем в JPEG с качеством 0.8
+            canvas.toBlob(async (blob) => {
+                const fileName = `${currentUser.id}_${Date.now()}.jpg`;
+                console.log('📸 Размер до сжатия:', (file.size / 1024).toFixed(2), 'KB');
+                console.log('📸 Размер после сжатия:', (blob.size / 1024).toFixed(2), 'KB');
+                
+                const { error } = await supabaseClient.storage
+                    .from('avatars')
+                    .upload(fileName, blob, { contentType: 'image/jpeg' });
+                
+                if (error) {
+                    console.error('Upload error:', error);
+                    reject(null);
+                    return;
+                }
+                
+                const { data: urlData } = supabaseClient.storage
+                    .from('avatars')
+                    .getPublicUrl(fileName);
+                
+                resolve(urlData.publicUrl);
+            }, 'image/jpeg', 0.8);
+        };
+        
+        reader.readAsDataURL(file);
+    });
+}
             
             async function loadMainScreen() {
                 if (isMainScreenLoaded) return;
