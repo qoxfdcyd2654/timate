@@ -1293,20 +1293,81 @@
                 modal.innerHTML = `
                     <div class="modal-content">
                         <h3><i class="fas fa-cog"></i> Настройки профиля</h3>
+                        
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                            <div class="user-avatar" style="width: 64px; height: 64px; cursor: pointer;" id="settingsAvatar" onclick="document.getElementById('settingsAvatarInput').click()">
+                                ${currentUser.avatar_url ? `<img src="${currentUser.avatar_url}">` : `<i class="fas fa-user"></i>`}
+                            </div>
+                            <div>
+                                <button onclick="document.getElementById('settingsAvatarInput').click()" style="background: #9b59b6; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer;">
+                                    <i class="fas fa-camera"></i> Сменить аватар
+                                </button>
+                                <p style="font-size: 11px; color: #999; margin-top: 5px;">Рекомендуемый размер: до 200x200</p>
+                            </div>
+                            <input type="file" id="settingsAvatarInput" style="display:none;" accept="image/*" onchange="changeAvatarFromSettings(this)">
+                        </div>
+                        
                         <input type="text" id="settingsDisplayName" placeholder="Отображаемое имя" value="${escapeHtml(currentUser.display_name || '')}">
                         <textarea id="settingsBio" rows="3" placeholder="О себе">${escapeHtml(currentUser.bio || '')}</textarea>
+                        
                         <div class="phone-row">
-                            <select id="settingsCountryCode"><option value="+7">+7</option><option value="+1">+1</option><option value="+44">+44</option></select>
-                            <input type="tel" id="settingsPhone" placeholder="Номер" value="${currentUser.phone ? currentUser.phone.replace(/^\+?\d+/, '') : ''}">
+                            <select id="settingsCountryCode">
+                                <option value="+7" ${currentUser.phone?.startsWith('+7') ? 'selected' : ''}>🇷🇺 Россия (+7)</option>
+                                <option value="+1" ${currentUser.phone?.startsWith('+1') ? 'selected' : ''}>🇺🇸 США (+1)</option>
+                                <option value="+44" ${currentUser.phone?.startsWith('+44') ? 'selected' : ''}>🇬🇧 Великобритания (+44)</option>
+                                <option value="+49" ${currentUser.phone?.startsWith('+49') ? 'selected' : ''}>🇩🇪 Германия (+49)</option>
+                                <option value="+33" ${currentUser.phone?.startsWith('+33') ? 'selected' : ''}>🇫🇷 Франция (+33)</option>
+                                <option value="+86" ${currentUser.phone?.startsWith('+86') ? 'selected' : ''}>🇨🇳 Китай (+86)</option>
+                                <option value="+380" ${currentUser.phone?.startsWith('+380') ? 'selected' : ''}>🇺🇦 Украина (+380)</option>
+                                <option value="+375" ${currentUser.phone?.startsWith('+375') ? 'selected' : ''}>🇧🇾 Беларусь (+375)</option>
+                            </select>
+                            <input type="tel" id="settingsPhone" placeholder="Номер телефона" value="${currentUser.phone ? currentUser.phone.replace(/^\+?\d+/, '') : ''}">
                         </div>
-                        <div class="checkbox-row"><input type="checkbox" id="settingsHidePhone" ${currentUser.hide_phone ? 'checked' : ''}><label><i class="fas fa-eye-slash"></i> Скрыть номер</label></div>
-                        <div class="checkbox-row"><input type="checkbox" id="settingsInvisibleMode" ${currentUser.invisible_mode ? 'checked' : ''}><label><i class="fas fa-user-secret"></i> Невидимый режим</label></div>
-                        <div class="checkbox-row"><input type="checkbox" id="settingsNotifications" ${notificationsEnabled ? 'checked' : ''}><label><i class="fas fa-bell"></i> Включить уведомления</label></div>
+                        
+                        <div class="checkbox-row">
+                            <input type="checkbox" id="settingsHidePhone" ${currentUser.hide_phone ? 'checked' : ''}>
+                            <label><i class="fas fa-eye-slash"></i> Скрыть номер телефона</label>
+                        </div>
+                        <div class="checkbox-row">
+                            <input type="checkbox" id="settingsInvisibleMode" ${currentUser.invisible_mode ? 'checked' : ''}>
+                            <label><i class="fas fa-user-secret"></i> Невидимый режим (не отображаться в списке пользователей)</label>
+                        </div>
+                        <div class="checkbox-row">
+                            <input type="checkbox" id="settingsNotifications" ${notificationsEnabled ? 'checked' : ''}>
+                            <label><i class="fas fa-bell"></i> Включить уведомления</label>
+                        </div>
+                        
                         <button class="save-btn" onclick="saveSettings()"><i class="fas fa-save"></i> Сохранить</button>
                         <button class="cancel-btn" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i> Отмена</button>
                     </div>
                 `;
                 document.body.appendChild(modal);
+            };
+            
+            window.changeAvatarFromSettings = async function(input) {
+                if (input.files && input.files[0]) {
+                    const file = input.files[0];
+                    if (file.size > 10 * 1024 * 1024) { showNotification('❌ Файл слишком большой (макс 10MB)'); return; }
+                    if (!file.type.startsWith('image/')) { showNotification('❌ Можно загружать только изображения'); return; }
+                    
+                    showNotification('🖼️ Обработка изображения...');
+                    const url = await uploadAvatar(file);
+                    if (url) {
+                        await supabaseClient.from('users').update({ avatar_url: url }).eq('id', currentUser.id);
+                        currentUser.avatar_url = url;
+                        saveSession(currentUser);
+                        
+                        const avatarDiv = document.getElementById('settingsAvatar');
+                        if (avatarDiv) {
+                            avatarDiv.innerHTML = `<img src="${url}">`;
+                        }
+                        
+                        showNotification('✅ Аватар обновлён');
+                        await loadMainScreen();
+                    } else {
+                        showNotification('❌ Ошибка загрузки аватара');
+                    }
+                }
             };
             
             window.saveSettings = async function() {
@@ -1316,7 +1377,9 @@
                 const hidePhone = document.getElementById('settingsHidePhone').checked;
                 const invisibleMode = document.getElementById('settingsInvisibleMode').checked;
                 const enableNotifications = document.getElementById('settingsNotifications').checked;
-                if (!displayName) { alert('Введите имя'); return; }
+                
+                if (!displayName) { alert('Введите отображаемое имя'); return; }
+                
                 const phoneDigits = phoneNumber.replace(/[^0-9]/g, '');
                 let newPhone = currentUser.phone;
                 if (phoneDigits) {
@@ -1325,18 +1388,30 @@
                     const { data: existing } = await supabaseClient.from('users').select('*').eq('phone', newPhone).neq('id', currentUser.id).single();
                     if (existing) { alert('Номер уже используется'); return; }
                 }
+                
                 const { error } = await supabaseClient.from('users').update({
-                    display_name: displayName, bio, phone: newPhone, hide_phone: hidePhone, invisible_mode: invisibleMode
+                    display_name: displayName,
+                    bio: bio,
+                    phone: newPhone,
+                    hide_phone: hidePhone,
+                    invisible_mode: invisibleMode
                 }).eq('id', currentUser.id);
+                
                 if (error) { alert('Ошибка'); return; }
-                currentUser.display_name = displayName; currentUser.bio = bio; currentUser.phone = newPhone;
-                currentUser.hide_phone = hidePhone; currentUser.invisible_mode = invisibleMode;
+                
+                currentUser.display_name = displayName;
+                currentUser.bio = bio;
+                currentUser.phone = newPhone;
+                currentUser.hide_phone = hidePhone;
+                currentUser.invisible_mode = invisibleMode;
                 saveSession(currentUser);
+                
                 if (enableNotifications && !notificationsEnabled) await requestNotificationPermission();
                 else if (!enableNotifications && notificationsEnabled) notificationsEnabled = false;
+                
                 document.querySelector('.modal')?.remove();
                 await loadMainScreen();
-                showNotification('Профиль обновлён');
+                showNotification('✅ Профиль обновлён');
             };
             
             window.logout = async function() {
