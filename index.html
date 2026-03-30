@@ -63,6 +63,12 @@
             font-weight: bold;
             font-size: 20px;
             cursor: pointer;
+            overflow: hidden;
+        }
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .user-info { flex: 1; }
         .user-name { font-weight: bold; color: #2c3e50; }
@@ -156,6 +162,12 @@
             font-size: 18px;
             flex-shrink: 0;
             background: #9b59b6;
+            overflow: hidden;
+        }
+        .contact-avatar img, .user-avatar-small img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .contact-info, .user-info-small, .chat-info { flex: 1; }
         .contact-name, .chat-name { font-weight: 600; color: #2c3e50; }
@@ -230,6 +242,12 @@
             background: #9b59b6;
             color: white;
             font-size: 24px;
+            overflow: hidden;
+        }
+        .chat-header-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .chat-header-info { flex: 1; }
         .chat-header-info h3 { color: #2c3e50; font-size: 18px; }
@@ -269,7 +287,17 @@
             border-bottom-right-radius: 4px;
         }
         .message-text { word-wrap: break-word; font-size: 14px; }
-        .message-time { font-size: 10px; margin-top: 5px; opacity: 0.7; text-align: right; }
+        .message-time {
+            font-size: 10px;
+            margin-top: 5px;
+            opacity: 0.7;
+            text-align: right;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+        }
+        .message-time i { font-size: 10px; margin-left: 4px; }
         .voice-message {
             display: flex;
             align-items: center;
@@ -496,54 +524,30 @@
                 recognition.continuous = true;
             }
             
-            // Функция обновления статуса онлайн
             async function updateOnlineStatus(isOnline) {
                 if (!currentUser) return;
                 try {
-                    await supabaseClient
-                        .from('users')
-                        .update({ is_online: isOnline })
-                        .eq('id', currentUser.id);
-                } catch (e) {
-                    console.error('Ошибка обновления статуса:', e);
-                }
+                    await supabaseClient.from('users').update({ is_online: isOnline }).eq('id', currentUser.id);
+                } catch (e) { console.error('Ошибка обновления статуса:', e); }
             }
             
-            // Функция для отслеживания активности пользователя
             function setupActivityTracking() {
                 let isActive = true;
                 let inactiveTimer = null;
-                
                 function setActive() {
-                    if (!isActive) {
-                        isActive = true;
-                        updateOnlineStatus(true);
-                    }
+                    if (!isActive) { isActive = true; updateOnlineStatus(true); }
                     if (inactiveTimer) clearTimeout(inactiveTimer);
-                    inactiveTimer = setTimeout(() => {
-                        if (isActive) {
-                            isActive = false;
-                            updateOnlineStatus(false);
-                        }
-                    }, 30000);
+                    inactiveTimer = setTimeout(() => { if (isActive) { isActive = false; updateOnlineStatus(false); } }, 30000);
                 }
-                
                 window.addEventListener('mousemove', setActive);
                 window.addEventListener('click', setActive);
                 window.addEventListener('keypress', setActive);
                 window.addEventListener('scroll', setActive);
                 window.addEventListener('touchstart', setActive);
-                
                 document.addEventListener('visibilitychange', () => {
-                    if (document.hidden) {
-                        if (inactiveTimer) clearTimeout(inactiveTimer);
-                        updateOnlineStatus(false);
-                        isActive = false;
-                    } else {
-                        setActive();
-                    }
+                    if (document.hidden) { if (inactiveTimer) clearTimeout(inactiveTimer); updateOnlineStatus(false); isActive = false; }
+                    else { setActive(); }
                 });
-                
                 setActive();
             }
             
@@ -561,91 +565,72 @@
                 try { new Notification(title, { body: body, silent: false }); } catch(e) {}
             }
             
+            // Функция сжатия изображения (уменьшение размера картинки, не байтов)
+            async function compressImage(file) {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    const reader = new FileReader();
+                    reader.onload = (e) => { img.src = e.target.result; };
+                    img.onload = () => {
+                        const maxSize = 200;
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > height) {
+                            if (width > maxSize) { height = Math.round((height * maxSize) / width); width = maxSize; }
+                        } else {
+                            if (height > maxSize) { width = Math.round((width * maxSize) / height); height = maxSize; }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        canvas.toBlob((blob) => { resolve(blob); }, 'image/jpeg', 0.85);
+                    };
+                    img.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+            
+            async function uploadAvatar(file) {
+                try {
+                    const compressedBlob = await compressImage(file);
+                    const fileName = `${currentUser.id}_${Date.now()}.jpg`;
+                    const { error } = await supabaseClient.storage.from('avatars').upload(fileName, compressedBlob, { contentType: 'image/jpeg' });
+                    if (error) { console.error('Upload error:', error); return null; }
+                    const { data: urlData } = supabaseClient.storage.from('avatars').getPublicUrl(fileName);
+                    return urlData.publicUrl;
+                } catch (e) { console.error('Compress error:', e); return null; }
+            }
+            
             async function sendVoiceMessage(receiverId, audioBlob, text) {
                 try {
                     const fileName = `voice_${currentUser.id}_${Date.now()}.webm`;
-                    console.log('📤 Загружаем аудио:', fileName, 'Размер:', audioBlob.size);
-                    
-                    const { error: uploadError } = await supabaseClient.storage
-                        .from('voice_messages')
-                        .upload(fileName, audioBlob);
-                    
-                    if (uploadError) {
-                        console.error('❌ Ошибка загрузки в storage:', uploadError);
-                        showNotification('Ошибка загрузки голоса');
-                        return false;
-                    }
-                    
-                    const { data: urlData } = supabaseClient.storage
-                        .from('voice_messages')
-                        .getPublicUrl(fileName);
-                    
-                    console.log('📥 Аудио URL:', urlData.publicUrl);
-                    
-                    const { error: insertError } = await supabaseClient
-                        .from('calls')
-                        .insert({
-                            caller_id: currentUser.id,
-                            receiver_id: receiverId,
-                            audio_url: urlData.publicUrl,
-                            text: text,
-                            duration: Math.round(audioBlob.size / 1000)
-                        });
-                    
-                    if (insertError) {
-                        console.error('❌ Ошибка вставки в calls:', insertError);
-                        showNotification('Ошибка сохранения голоса');
-                        return false;
-                    }
-                    
-                    console.log('✅ Голосовое сохранено');
+                    const { error: uploadError } = await supabaseClient.storage.from('voice_messages').upload(fileName, audioBlob);
+                    if (uploadError) { console.error('Upload error:', uploadError); showNotification('Ошибка загрузки голоса'); return false; }
+                    const { data: urlData } = supabaseClient.storage.from('voice_messages').getPublicUrl(fileName);
+                    const { error: insertError } = await supabaseClient.from('calls').insert({
+                        caller_id: currentUser.id, receiver_id: receiverId,
+                        audio_url: urlData.publicUrl, text: text, duration: Math.round(audioBlob.size / 1000)
+                    });
+                    if (insertError) { console.error('Insert error:', insertError); showNotification('Ошибка сохранения голоса'); return false; }
                     return true;
-                } catch (e) {
-                    console.error('❌ Исключение:', e);
-                    return false;
-                }
+                } catch (e) { console.error('Exception:', e); return false; }
             }
             
             function startSpeechToText(callback) {
                 if (!recognition) { callback(null, 'not supported'); return; }
-                
                 let finalTranscript = '';
-                
                 recognition.onresult = (event) => {
-                    let interimTranscript = '';
                     for (let i = event.resultIndex; i < event.results.length; i++) {
-                        const transcript = event.results[i][0].transcript;
-                        if (event.results[i].isFinal) {
-                            finalTranscript += transcript;
-                        } else {
-                            interimTranscript += transcript;
-                        }
+                        if (event.results[i].isFinal) { finalTranscript += event.results[i][0].transcript; }
                     }
-                    if (finalTranscript) {
-                        callback(finalTranscript, null);
-                        recognition.stop();
-                    }
+                    if (finalTranscript) { callback(finalTranscript, null); recognition.stop(); }
                 };
-                
-                recognition.onerror = (event) => {
-                    console.error('Speech recognition error:', event.error);
-                    callback(null, event.error);
-                    recognition.stop();
-                };
-                
-                recognition.onend = () => {
-                    if (!finalTranscript) {
-                        callback(null, 'no speech detected');
-                    }
-                };
-                
+                recognition.onerror = () => { callback(null, 'error'); recognition.stop(); };
+                recognition.onend = () => { if (!finalTranscript) callback(null, 'no speech'); };
                 recognition.start();
-                setTimeout(() => {
-                    if (recognition && recognition.abort) {
-                        recognition.abort();
-                        if (!finalTranscript) callback(null, 'timeout');
-                    }
-                }, 10000);
+                setTimeout(() => { if (recognition && !finalTranscript) { recognition.abort(); callback(null, 'timeout'); } }, 10000);
             }
             
             async function startRecording() {
@@ -653,35 +638,14 @@
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
                     audioChunks = [];
-                    
-                    mediaRecorder.ondataavailable = (event) => {
-                        if (event.data.size > 0) {
-                            audioChunks.push(event.data);
-                        }
-                    };
-                    
+                    mediaRecorder.ondataavailable = (event) => { if (event.data.size > 0) audioChunks.push(event.data); };
                     mediaRecorder.onstop = async () => {
                         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                         stream.getTracks().forEach(track => track.stop());
-                        
-                        console.log('🎤 Запись остановлена, размер:', audioBlob.size);
-                        
-                        if (audioBlob.size < 1000) {
-                            showNotification('❌ Слишком короткое сообщение');
-                            return;
-                        }
-                        
+                        if (audioBlob.size < 1000) { showNotification('❌ Слишком короткое сообщение'); return; }
                         showNotification('🔊 Преобразую голос в текст...');
-                        
                         startSpeechToText(async (text, error) => {
-                            let finalText = '🎤 Голосовое сообщение';
-                            if (text && text.trim()) {
-                                finalText = text.trim();
-                                console.log('📝 Распознанный текст:', finalText);
-                            } else {
-                                console.log('⚠️ Текст не распознан');
-                            }
-                            
+                            const finalText = text && text.trim() ? text.trim() : '🎤 Голосовое сообщение';
                             if (currentContact) {
                                 const success = await sendVoiceMessage(currentContact, audioBlob, finalText);
                                 if (success) {
@@ -689,31 +653,19 @@
                                     await loadMessages(currentContact);
                                     await renderChat(currentContact);
                                     lastMessagesMap.set(`private_${currentContact}`, JSON.stringify(window.currentMessages));
-                                } else {
-                                    showNotification('❌ Ошибка отправки голосового');
                                 }
                             }
                         });
                     };
-                    
                     mediaRecorder.start(1000);
                     isRecording = true;
                     updateRecordButton(true);
                     showNotification('🎙️ Запись началась...');
-                    
-                } catch(e) {
-                    console.error('Микрофон не доступен:', e);
-                    showNotification('❌ Нет доступа к микрофону');
-                }
+                } catch(e) { showNotification('❌ Нет доступа к микрофону'); }
             }
             
             function stopRecording() {
-                if (mediaRecorder && isRecording) {
-                    mediaRecorder.stop();
-                    isRecording = false;
-                    updateRecordButton(false);
-                    showNotification('⏹️ Запись остановлена');
-                }
+                if (mediaRecorder && isRecording) { mediaRecorder.stop(); isRecording = false; updateRecordButton(false); showNotification('⏹️ Запись остановлена'); }
             }
             
             function updateRecordButton(recording) {
@@ -812,16 +764,10 @@
                 const password = document.getElementById('authPassword').value;
                 const countryCode = document.getElementById('authCountryCode').value;
                 const phoneDigits = phone.replace(/[^0-9]/g, '');
-                if (!phoneDigits || phoneDigits.length < 5) {
-                    document.getElementById('authError').textContent = '❌ Введите корректный номер телефона';
-                    return;
-                }
+                if (!phoneDigits || phoneDigits.length < 5) { document.getElementById('authError').textContent = '❌ Введите корректный номер телефона'; return; }
                 const fullPhone = countryCode + phoneDigits;
                 const { data: user } = await supabaseClient.from('users').select('*').eq('phone', fullPhone).single();
-                if (!user || user.password !== password) {
-                    document.getElementById('authError').textContent = '❌ Неверный номер или пароль';
-                    return;
-                }
+                if (!user || user.password !== password) { document.getElementById('authError').textContent = '❌ Неверный номер или пароль'; return; }
                 currentUser = user;
                 saveSession(currentUser);
                 await supabaseClient.from('users').update({ is_online: true }).eq('id', currentUser.id);
@@ -866,60 +812,21 @@
                 const confirm = document.getElementById('regConfirmPassword').value;
                 const countryCode = document.getElementById('regCountryCode').value;
                 
-                if (!username || !displayName || !phone || !password) {
-                    document.getElementById('regError').textContent = '❌ Заполните все поля';
-                    return;
-                }
-                
+                if (!username || !displayName || !phone || !password) { document.getElementById('regError').textContent = '❌ Заполните все поля'; return; }
                 const phoneDigits = phone.replace(/[^0-9]/g, '');
-                if (!phoneDigits || phoneDigits.length < 5) {
-                    document.getElementById('regError').textContent = '❌ Введите корректный номер телефона (только цифры, минимум 5 цифр)';
-                    return;
-                }
-                
-                if (password !== confirm) { 
-                    document.getElementById('regError').textContent = '❌ Пароли не совпадают'; 
-                    return; 
-                }
-                
-                if (password.length < 3) { 
-                    document.getElementById('regError').textContent = '❌ Пароль минимум 3 символа'; 
-                    return; 
-                }
-                
+                if (!phoneDigits || phoneDigits.length < 5) { document.getElementById('regError').textContent = '❌ Введите корректный номер телефона (только цифры, минимум 5 цифр)'; return; }
+                if (password !== confirm) { document.getElementById('regError').textContent = '❌ Пароли не совпадают'; return; }
+                if (password.length < 3) { document.getElementById('regError').textContent = '❌ Пароль минимум 3 символа'; return; }
                 const fullPhone = countryCode + phoneDigits;
-                
                 const { data: existing } = await supabaseClient.from('users').select('*').eq('phone', fullPhone).single();
-                if (existing) { 
-                    document.getElementById('regError').textContent = '❌ Номер уже зарегистрирован'; 
-                    return; 
-                }
-                
+                if (existing) { document.getElementById('regError').textContent = '❌ Номер уже зарегистрирован'; return; }
                 const { data: existingUsername } = await supabaseClient.from('users').select('*').eq('username', username).single();
-                if (existingUsername) { 
-                    document.getElementById('regError').textContent = '❌ Имя пользователя уже занято'; 
-                    return; 
-                }
-                
+                if (existingUsername) { document.getElementById('regError').textContent = '❌ Имя пользователя уже занято'; return; }
                 const { data: newUser, error } = await supabaseClient.from('users').insert({
-                    username: username,
-                    display_name: displayName,
-                    password: password,
-                    phone: fullPhone,
-                    bio: bio,
-                    avatar_color: '#9b59b6',
-                    is_online: true,
-                    hide_phone: false,
-                    invisible_mode: false,
-                    avatar_url: null
+                    username, display_name: displayName, password, phone: fullPhone, bio,
+                    avatar_color: '#9b59b6', is_online: true, hide_phone: false, invisible_mode: false, avatar_url: null
                 }).select().single();
-                
-                if (error) { 
-                    console.error('Registration error:', error);
-                    document.getElementById('regError').textContent = '❌ Ошибка регистрации: ' + error.message; 
-                    return; 
-                }
-                
+                if (error) { document.getElementById('regError').textContent = '❌ Ошибка регистрации'; return; }
                 currentUser = newUser;
                 saveSession(currentUser);
                 await requestNotificationPermission();
@@ -927,70 +834,6 @@
                 setupActivityTracking();
                 showNotification('✅ Регистрация успешна! Добро пожаловать в Timate!');
             };
-            
-async function uploadAvatar(file) {
-    return new Promise((resolve, reject) => {
-        // Создаём Image объект для сжатия
-        const img = new Image();
-        const reader = new FileReader();
-        
-        reader.onload = (e) => {
-            img.src = e.target.result;
-        };
-        
-        img.onload = async () => {
-            // Максимальный размер аватарки 200x200
-            const maxSize = 200;
-            let width = img.width;
-            let height = img.height;
-            
-            // Вычисляем новые размеры с сохранением пропорций
-            if (width > height) {
-                if (width > maxSize) {
-                    height = Math.round((height * maxSize) / width);
-                    width = maxSize;
-                }
-            } else {
-                if (height > maxSize) {
-                    width = Math.round((width * maxSize) / height);
-                    height = maxSize;
-                }
-            }
-            
-            // Создаём canvas для сжатия
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            // Конвертируем в JPEG с качеством 0.8
-            canvas.toBlob(async (blob) => {
-                const fileName = `${currentUser.id}_${Date.now()}.jpg`;
-                console.log('📸 Размер до сжатия:', (file.size / 1024).toFixed(2), 'KB');
-                console.log('📸 Размер после сжатия:', (blob.size / 1024).toFixed(2), 'KB');
-                
-                const { error } = await supabaseClient.storage
-                    .from('avatars')
-                    .upload(fileName, blob, { contentType: 'image/jpeg' });
-                
-                if (error) {
-                    console.error('Upload error:', error);
-                    reject(null);
-                    return;
-                }
-                
-                const { data: urlData } = supabaseClient.storage
-                    .from('avatars')
-                    .getPublicUrl(fileName);
-                
-                resolve(urlData.publicUrl);
-            }, 'image/jpeg', 0.8);
-        };
-        
-        reader.readAsDataURL(file);
-    });
-}
             
             async function loadMainScreen() {
                 if (isMainScreenLoaded) return;
@@ -1045,14 +888,18 @@ async function uploadAvatar(file) {
             
             window.uploadNewAvatar = async function(input) {
                 if (input.files && input.files[0]) {
-                    const url = await uploadAvatar(input.files[0]);
+                    const file = input.files[0];
+                    if (file.size > 10 * 1024 * 1024) { showNotification('❌ Файл слишком большой (макс 10MB)'); return; }
+                    if (!file.type.startsWith('image/')) { showNotification('❌ Можно загружать только изображения'); return; }
+                    showNotification('🖼️ Обработка изображения...');
+                    const url = await uploadAvatar(file);
                     if (url) {
                         await supabaseClient.from('users').update({ avatar_url: url }).eq('id', currentUser.id);
                         currentUser.avatar_url = url;
                         saveSession(currentUser);
-                        showNotification('Аватар обновлён');
+                        showNotification('✅ Аватар обновлён');
                         await loadMainScreen();
-                    }
+                    } else { showNotification('❌ Ошибка загрузки аватара'); }
                 }
             };
             
@@ -1064,8 +911,9 @@ async function uploadAvatar(file) {
                 container.innerHTML = contacts.map(c => {
                     const u = c.users;
                     const isOnline = u.is_online;
+                    const avatarHtml = u.avatar_url ? `<img src="${u.avatar_url}">` : `<i class="fas fa-user"></i>`;
                     return `<div class="contact-item" onclick="selectContact('${u.id}')" data-contact-id="${u.id}">
-                        <div class="contact-avatar" style="background: ${u.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
+                        <div class="contact-avatar" style="background: ${u.avatar_color || '#9b59b6'}">${avatarHtml}</div>
                         <div class="contact-info">
                             <div class="contact-name">${escapeHtml(c.nickname || u.display_name || u.username)}</div>
                             <div class="contact-status ${isOnline ? 'online' : 'offline'}"><i class="fas fa-circle"></i> ${isOnline ? 'онлайн' : 'офлайн'}</div>
@@ -1095,8 +943,9 @@ async function uploadAvatar(file) {
                 const contactIds = new Set(contacts?.map(c => c.contact_id) || []);
                 container.innerHTML = users.map(u => {
                     const isOnline = u.is_online;
+                    const avatarHtml = u.avatar_url ? `<img src="${u.avatar_url}">` : `<i class="fas fa-user"></i>`;
                     return `<div class="user-item">
-                        <div class="user-avatar-small" style="background: ${u.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
+                        <div class="user-avatar-small" style="background: ${u.avatar_color || '#9b59b6'}">${avatarHtml}</div>
                         <div class="user-info-small">
                             <div class="contact-name">${escapeHtml(u.display_name || u.username)}</div>
                             <div class="contact-status ${isOnline ? 'online' : 'offline'}"><i class="fas fa-circle"></i> ${isOnline ? 'онлайн' : 'офлайн'}</div>
@@ -1165,6 +1014,11 @@ async function uploadAvatar(file) {
                 await loadMessages(contactId);
                 await renderChat(contactId);
                 lastMessagesMap.set(`private_${contactId}`, JSON.stringify(window.currentMessages));
+                
+                // Отмечаем все непрочитанные сообщения от этого контакта как прочитанные
+                await supabaseClient.from('messages').update({ read_at: new Date().toISOString() }).eq('from_user_id', contactId).eq('to_user_id', currentUser.id).is('read_at', null);
+                await loadMessages(contactId);
+                await renderChat(contactId);
             };
             
             window.selectChat = async function(chatId, type) {
@@ -1181,27 +1035,12 @@ async function uploadAvatar(file) {
             
             async function loadMessages(contactId) {
                 const [messagesRes, voiceMessagesRes] = await Promise.all([
-                    supabaseClient
-                        .from('messages')
-                        .select('*')
-                        .or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${contactId}),and(from_user_id.eq.${contactId},to_user_id.eq.${currentUser.id})`)
-                        .order('created_at'),
-                    supabaseClient
-                        .from('calls')
-                        .select('*')
-                        .or(`and(caller_id.eq.${currentUser.id},receiver_id.eq.${contactId}),and(caller_id.eq.${contactId},receiver_id.eq.${currentUser.id})`)
-                        .order('created_at')
+                    supabaseClient.from('messages').select('*').or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${contactId}),and(from_user_id.eq.${contactId},to_user_id.eq.${currentUser.id})`).order('created_at'),
+                    supabaseClient.from('calls').select('*').or(`and(caller_id.eq.${currentUser.id},receiver_id.eq.${contactId}),and(caller_id.eq.${contactId},receiver_id.eq.${currentUser.id})`).order('created_at')
                 ]);
                 
-                const textMessages = (messagesRes.data || []).map(m => ({ ...m, type: 'text' }));
-                const voiceMessages = (voiceMessagesRes.data || []).map(v => ({ 
-                    ...v, 
-                    type: 'voice', 
-                    from_user_id: v.caller_id, 
-                    to_user_id: v.receiver_id, 
-                    content: v.text || '🎤 Голосовое сообщение',
-                    audio_url: v.audio_url
-                }));
+                const textMessages = (messagesRes.data || []).map(m => ({ ...m, type: 'text', delivered: m.delivered || false, read_at: m.read_at }));
+                const voiceMessages = (voiceMessagesRes.data || []).map(v => ({ ...v, type: 'voice', from_user_id: v.caller_id, to_user_id: v.receiver_id, content: v.text || '🎤 Голосовое сообщение', audio_url: v.audio_url, delivered: true, read_at: null }));
                 
                 const allMessages = [...textMessages, ...voiceMessages];
                 allMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
@@ -1213,15 +1052,23 @@ async function uploadAvatar(file) {
                 window.currentMessages = messages || [];
             }
             
+            function getStatusIcon(msg) {
+                if (msg.from_user_id !== currentUser.id) return '';
+                if (msg.read_at) return '<i class="fas fa-check-double" style="color:#2ecc71;"></i>';
+                if (msg.delivered) return '<i class="fas fa-check-double" style="color:#999;"></i>';
+                return '<i class="fas fa-check" style="color:#999;"></i>';
+            }
+            
             async function renderChat(contactId) {
                 const { data: contact } = await supabaseClient.from('users').select('*').eq('id', contactId).single();
                 const chatArea = document.getElementById('chatArea');
                 const messages = window.currentMessages || [];
                 const isOnline = contact?.is_online;
+                const avatarHtml = contact?.avatar_url ? `<img src="${contact.avatar_url}">` : `<i class="fas fa-user"></i>`;
                 
                 chatArea.innerHTML = `
                     <div class="chat-header">
-                        <div class="chat-header-avatar" style="background: ${contact?.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
+                        <div class="chat-header-avatar" style="background: ${contact?.avatar_color || '#9b59b6'}">${avatarHtml}</div>
                         <div class="chat-header-info">
                             <h3>${escapeHtml(contact?.display_name || contact?.username)}</h3>
                             <p class="${isOnline ? 'online' : 'offline'}"><i class="fas fa-circle"></i> ${isOnline ? 'онлайн' : 'офлайн'}</p>
@@ -1239,7 +1086,10 @@ async function uploadAvatar(file) {
                                                 <div class="voice-duration">${msg.duration || 0} сек</div>
                                             </div>
                                             ${msg.text && msg.text !== '🎤 Голосовое сообщение' ? `<div class="voice-text"><i class="fas fa-language"></i> ${escapeHtml(msg.text)}</div>` : ''}
-                                            <div class="message-time"><i class="far fa-clock"></i> ${new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                                            <div class="message-time">
+                                                <i class="far fa-clock"></i> ${new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                                                ${getStatusIcon(msg)}
+                                            </div>
                                         </div>
                                     </div>
                                 `;
@@ -1248,7 +1098,10 @@ async function uploadAvatar(file) {
                                     <div class="message ${msg.from_user_id === currentUser.id ? 'out' : 'in'}">
                                         <div class="message-bubble">
                                             <div class="message-text">${escapeHtml(msg.content)}</div>
-                                            <div class="message-time"><i class="far fa-clock"></i> ${new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                                            <div class="message-time">
+                                                <i class="far fa-clock"></i> ${new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                                                ${getStatusIcon(msg)}
+                                            </div>
                                         </div>
                                     </div>
                                 `;
@@ -1300,10 +1153,7 @@ async function uploadAvatar(file) {
             
             window.startVoiceCall = function(contactId) {
                 selectContact(contactId);
-                setTimeout(() => {
-                    const btn = document.getElementById('voiceRecordBtn');
-                    if (btn) btn.click();
-                }, 500);
+                setTimeout(() => { const btn = document.getElementById('voiceRecordBtn'); if (btn) btn.click(); }, 500);
             };
             
             window.toggleVoiceRecording = function() {
@@ -1315,7 +1165,7 @@ async function uploadAvatar(file) {
                 const input = document.getElementById('messageInput');
                 const content = input.value.trim();
                 if (!content || !currentContact) return;
-                await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, to_user_id: currentContact, content });
+                const { error } = await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, to_user_id: currentContact, content, delivered: true });
                 input.value = '';
                 await loadMessages(currentContact);
                 await renderChat(currentContact);
@@ -1326,7 +1176,7 @@ async function uploadAvatar(file) {
                 const input = document.getElementById('messageInput');
                 const content = input.value.trim();
                 if (!content || !currentChat) return;
-                await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, chat_id: currentChat, content });
+                await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, chat_id: currentChat, content, delivered: true });
                 input.value = '';
                 await loadGroupMessages(currentChat);
                 await renderGroupChat(currentChat);
@@ -1334,32 +1184,12 @@ async function uploadAvatar(file) {
             };
             
             window.playVoiceMessage = function(audioUrl) {
-                console.log('🎵 Воспроизведение:', audioUrl);
-                
-                if (currentAudio) {
-                    currentAudio.pause();
-                    currentAudio = null;
-                }
-                
+                if (currentAudio) { currentAudio.pause(); currentAudio = null; }
                 const audio = new Audio();
                 audio.src = audioUrl;
-                audio.controls = false;
-                
-                audio.oncanplaythrough = () => {
-                    console.log('✅ Аудио загружено, воспроизводим');
-                    audio.play().catch(e => console.error('Play error:', e));
-                };
-                
-                audio.onerror = (e) => {
-                    console.error('❌ Ошибка загрузки аудио:', e);
-                    showNotification('❌ Не удалось загрузить аудио');
-                };
-                
-                audio.onended = () => {
-                    console.log('⏹️ Воспроизведение завершено');
-                    currentAudio = null;
-                };
-                
+                audio.oncanplaythrough = () => { audio.play().catch(e => console.error('Play error:', e)); };
+                audio.onerror = (e) => { console.error('Audio error:', e); showNotification('❌ Не удалось загрузить аудио'); };
+                audio.onended = () => { currentAudio = null; };
                 currentAudio = audio;
                 audio.load();
             };
@@ -1384,9 +1214,7 @@ async function uploadAvatar(file) {
                     </div>
                 `;
                 document.body.appendChild(modal);
-                document.getElementById('chatType').onchange = function() {
-                    document.getElementById('privacyOption').style.display = this.value === 'channel' ? 'block' : 'none';
-                };
+                document.getElementById('chatType').onchange = function() { document.getElementById('privacyOption').style.display = this.value === 'channel' ? 'block' : 'none'; };
             };
             
             window.createChat = async function() {
@@ -1421,9 +1249,7 @@ async function uploadAvatar(file) {
                                 const lastMsg = newMessages[newMessages.length - 1];
                                 if (lastMsg && lastMsg.from_user_id !== currentUser.id) {
                                     const { data: sender } = await supabaseClient.from('users').select('display_name').eq('id', lastMsg.from_user_id).single();
-                                    const title = `💬 ${sender?.display_name || 'Пользователь'}`;
-                                    const body = lastMsg.type === 'voice' ? '🎤 Голосовое сообщение' : lastMsg.content;
-                                    sendPushNotification(title, body);
+                                    sendPushNotification(`💬 ${sender?.display_name || 'Пользователь'}`, lastMsg.type === 'voice' ? '🎤 Голосовое сообщение' : lastMsg.content);
                                 }
                             }
                         }
@@ -1434,22 +1260,9 @@ async function uploadAvatar(file) {
                         if (currentString !== lastString) {
                             lastMessagesMap.set(`group_${currentChat}`, currentString);
                             await renderGroupChat(currentChat);
-                            const newMessages = window.currentMessages || [];
-                            const oldMessages = lastString ? JSON.parse(lastString) : [];
-                            if (newMessages.length > oldMessages.length) {
-                                const lastMsg = newMessages[newMessages.length - 1];
-                                if (lastMsg && lastMsg.from_user_id !== currentUser.id) {
-                                    const title = `💬 Новое сообщение в чате`;
-                                    sendPushNotification(title, lastMsg.content);
-                                }
-                            }
                         }
                     }
-                    
-                    // Обновляем статус онлайн в фоне
-                    if (currentUser) {
-                        await updateOnlineStatus(true);
-                    }
+                    if (currentUser) { await updateOnlineStatus(true); }
                 }, 300);
             }
             
