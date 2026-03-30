@@ -66,8 +66,15 @@
         }
         .user-info { flex: 1; }
         .user-name { font-weight: bold; color: #2c3e50; }
-        .user-status { font-size: 12px; color: #2ecc71; }
-        .user-status i { font-size: 8px; margin-right: 4px; }
+        .user-status {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .user-status.online { color: #2ecc71; }
+        .user-status.offline { color: #999; }
+        .user-status i { font-size: 8px; }
         .user-phone { font-size: 10px; color: #999; margin-top: 2px; }
         .user-bio { font-size: 11px; color: #666; margin-top: 2px; font-style: italic; }
         .settings-btn, .logout-btn {
@@ -152,9 +159,15 @@
         }
         .contact-info, .user-info-small, .chat-info { flex: 1; }
         .contact-name, .chat-name { font-weight: 600; color: #2c3e50; }
-        .contact-status, .chat-type { font-size: 11px; }
+        .contact-status {
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
         .contact-status.online { color: #2ecc71; }
         .contact-status.offline { color: #999; }
+        .contact-status i { font-size: 8px; }
         .contact-actions {
             display: flex;
             gap: 8px;
@@ -220,7 +233,14 @@
         }
         .chat-header-info { flex: 1; }
         .chat-header-info h3 { color: #2c3e50; font-size: 18px; }
-        .chat-header-info p { font-size: 12px; color: #2ecc71; }
+        .chat-header-info p {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .chat-header-info p.online { color: #2ecc71; }
+        .chat-header-info p.offline { color: #999; }
         .messages-container {
             flex: 1;
             padding: 20px;
@@ -473,6 +493,58 @@
                 recognition = new SpeechRecognition();
                 recognition.lang = 'ru-RU';
                 recognition.interimResults = true;
+                recognition.continuous = true;
+            }
+            
+            // Функция обновления статуса онлайн
+            async function updateOnlineStatus(isOnline) {
+                if (!currentUser) return;
+                try {
+                    await supabaseClient
+                        .from('users')
+                        .update({ is_online: isOnline })
+                        .eq('id', currentUser.id);
+                } catch (e) {
+                    console.error('Ошибка обновления статуса:', e);
+                }
+            }
+            
+            // Функция для отслеживания активности пользователя
+            function setupActivityTracking() {
+                let isActive = true;
+                let inactiveTimer = null;
+                
+                function setActive() {
+                    if (!isActive) {
+                        isActive = true;
+                        updateOnlineStatus(true);
+                    }
+                    if (inactiveTimer) clearTimeout(inactiveTimer);
+                    inactiveTimer = setTimeout(() => {
+                        if (isActive) {
+                            isActive = false;
+                            updateOnlineStatus(false);
+                        }
+                    }, 30000);
+                }
+                
+                window.addEventListener('mousemove', setActive);
+                window.addEventListener('click', setActive);
+                window.addEventListener('keypress', setActive);
+                window.addEventListener('scroll', setActive);
+                window.addEventListener('touchstart', setActive);
+                
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden) {
+                        if (inactiveTimer) clearTimeout(inactiveTimer);
+                        updateOnlineStatus(false);
+                        isActive = false;
+                    } else {
+                        setActive();
+                    }
+                });
+                
+                setActive();
             }
             
             async function requestNotificationPermission() {
@@ -492,7 +564,7 @@
             async function sendVoiceMessage(receiverId, audioBlob, text) {
                 try {
                     const fileName = `voice_${currentUser.id}_${Date.now()}.webm`;
-                    console.log('📤 Загружаем аудио:', fileName);
+                    console.log('📤 Загружаем аудио:', fileName, 'Размер:', audioBlob.size);
                     
                     const { error: uploadError } = await supabaseClient.storage
                         .from('voice_messages')
@@ -536,36 +608,99 @@
             
             function startSpeechToText(callback) {
                 if (!recognition) { callback(null, 'not supported'); return; }
-                recognition.onresult = (event) => { callback(event.results[0][0].transcript, null); };
-                recognition.onerror = () => { callback(null, 'error'); };
+                
+                let finalTranscript = '';
+                
+                recognition.onresult = (event) => {
+                    let interimTranscript = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript;
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+                    if (finalTranscript) {
+                        callback(finalTranscript, null);
+                        recognition.stop();
+                    }
+                };
+                
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    callback(null, event.error);
+                    recognition.stop();
+                };
+                
+                recognition.onend = () => {
+                    if (!finalTranscript) {
+                        callback(null, 'no speech detected');
+                    }
+                };
+                
                 recognition.start();
+                setTimeout(() => {
+                    if (recognition && recognition.abort) {
+                        recognition.abort();
+                        if (!finalTranscript) callback(null, 'timeout');
+                    }
+                }, 10000);
             }
             
             async function startRecording() {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
                     audioChunks = [];
-                    mediaRecorder.ondataavailable = (event) => { audioChunks.push(event.data); };
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
+                    };
+                    
                     mediaRecorder.onstop = async () => {
                         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                         stream.getTracks().forEach(track => track.stop());
+                        
+                        console.log('🎤 Запись остановлена, размер:', audioBlob.size);
+                        
+                        if (audioBlob.size < 1000) {
+                            showNotification('❌ Слишком короткое сообщение');
+                            return;
+                        }
+                        
+                        showNotification('🔊 Преобразую голос в текст...');
+                        
                         startSpeechToText(async (text, error) => {
-                            const finalText = text || '🎤 Голосовое сообщение';
+                            let finalText = '🎤 Голосовое сообщение';
+                            if (text && text.trim()) {
+                                finalText = text.trim();
+                                console.log('📝 Распознанный текст:', finalText);
+                            } else {
+                                console.log('⚠️ Текст не распознан');
+                            }
+                            
                             if (currentContact) {
                                 const success = await sendVoiceMessage(currentContact, audioBlob, finalText);
                                 if (success) {
-                                    showNotification('Голосовое сообщение отправлено');
+                                    showNotification('✅ Голосовое сообщение отправлено');
                                     await loadMessages(currentContact);
                                     await renderChat(currentContact);
                                     lastMessagesMap.set(`private_${currentContact}`, JSON.stringify(window.currentMessages));
+                                } else {
+                                    showNotification('❌ Ошибка отправки голосового');
                                 }
                             }
                         });
                     };
-                    mediaRecorder.start();
+                    
+                    mediaRecorder.start(1000);
                     isRecording = true;
                     updateRecordButton(true);
+                    showNotification('🎙️ Запись началась...');
+                    
                 } catch(e) {
                     console.error('Микрофон не доступен:', e);
                     showNotification('❌ Нет доступа к микрофону');
@@ -577,6 +712,7 @@
                     mediaRecorder.stop();
                     isRecording = false;
                     updateRecordButton(false);
+                    showNotification('⏹️ Запись остановлена');
                 }
             }
             
@@ -594,9 +730,10 @@
                     const user = JSON.parse(savedUser);
                     if (user.id) {
                         currentUser = user;
-                        supabaseClient.from('users').update({ status: 'online' }).eq('id', currentUser.id);
+                        supabaseClient.from('users').update({ is_online: true }).eq('id', currentUser.id);
                         requestNotificationPermission();
                         loadMainScreen();
+                        setupActivityTracking();
                     } else { showAuth(); }
                 } catch(e) { showAuth(); }
             } else { showAuth(); }
@@ -687,9 +824,10 @@
                 }
                 currentUser = user;
                 saveSession(currentUser);
-                await supabaseClient.from('users').update({ status: 'online' }).eq('id', currentUser.id);
+                await supabaseClient.from('users').update({ is_online: true }).eq('id', currentUser.id);
                 await requestNotificationPermission();
                 await loadMainScreen();
+                setupActivityTracking();
             };
             
             window.showRegister = async function() {
@@ -720,10 +858,10 @@
             };
             
             window.register = async function() {
-                const username = document.getElementById('regUsername').value;
-                const displayName = document.getElementById('regDisplayName').value;
-                const bio = document.getElementById('regBio').value;
-                const phone = document.getElementById('regPhone').value;
+                const username = document.getElementById('regUsername').value.trim();
+                const displayName = document.getElementById('regDisplayName').value.trim();
+                const bio = document.getElementById('regBio').value.trim();
+                const phone = document.getElementById('regPhone').value.trim();
                 const password = document.getElementById('regPassword').value;
                 const confirm = document.getElementById('regConfirmPassword').value;
                 const countryCode = document.getElementById('regCountryCode').value;
@@ -732,24 +870,62 @@
                     document.getElementById('regError').textContent = '❌ Заполните все поля';
                     return;
                 }
+                
                 const phoneDigits = phone.replace(/[^0-9]/g, '');
                 if (!phoneDigits || phoneDigits.length < 5) {
-                    document.getElementById('regError').textContent = '❌ Введите корректный номер телефона (только цифры)';
+                    document.getElementById('regError').textContent = '❌ Введите корректный номер телефона (только цифры, минимум 5 цифр)';
                     return;
                 }
-                if (password !== confirm) { document.getElementById('regError').textContent = '❌ Пароли не совпадают'; return; }
-                if (password.length < 3) { document.getElementById('regError').textContent = '❌ Пароль минимум 3 символа'; return; }
+                
+                if (password !== confirm) { 
+                    document.getElementById('regError').textContent = '❌ Пароли не совпадают'; 
+                    return; 
+                }
+                
+                if (password.length < 3) { 
+                    document.getElementById('regError').textContent = '❌ Пароль минимум 3 символа'; 
+                    return; 
+                }
+                
                 const fullPhone = countryCode + phoneDigits;
+                
                 const { data: existing } = await supabaseClient.from('users').select('*').eq('phone', fullPhone).single();
-                if (existing) { document.getElementById('regError').textContent = '❌ Номер уже зарегистрирован'; return; }
+                if (existing) { 
+                    document.getElementById('regError').textContent = '❌ Номер уже зарегистрирован'; 
+                    return; 
+                }
+                
+                const { data: existingUsername } = await supabaseClient.from('users').select('*').eq('username', username).single();
+                if (existingUsername) { 
+                    document.getElementById('regError').textContent = '❌ Имя пользователя уже занято'; 
+                    return; 
+                }
+                
                 const { data: newUser, error } = await supabaseClient.from('users').insert({
-                    username, display_name: displayName, password, phone: fullPhone, bio,
-                    avatar_color: '#9b59b6', status: 'online', hide_phone: false, invisible_mode: false, avatar_url: null
+                    username: username,
+                    display_name: displayName,
+                    password: password,
+                    phone: fullPhone,
+                    bio: bio,
+                    avatar_color: '#9b59b6',
+                    is_online: true,
+                    hide_phone: false,
+                    invisible_mode: false,
+                    avatar_url: null
                 }).select().single();
-                if (error) { document.getElementById('regError').textContent = '❌ Ошибка'; return; }
-                currentUser = newUser; saveSession(currentUser);
+                
+                if (error) { 
+                    console.error('Registration error:', error);
+                    document.getElementById('regError').textContent = '❌ Ошибка регистрации: ' + error.message; 
+                    return; 
+                }
+                
+                currentUser = newUser;
+                saveSession(currentUser);
                 await requestNotificationPermission();
                 await loadMainScreen();
+                setupActivityTracking();
+                showNotification('✅ Регистрация успешна! Добро пожаловать в Timate!');
             };
             
             async function uploadAvatar(file) {
@@ -766,6 +942,7 @@
                 if (autoUpdateInterval) clearInterval(autoUpdateInterval);
                 
                 const avatarHtml = currentUser.avatar_url ? `<img src="${currentUser.avatar_url}">` : `<i class="fas fa-user"></i>`;
+                const isOnline = currentUser.is_online;
                 
                 document.getElementById('app').innerHTML = `
                     <div class="timate-container">
@@ -776,7 +953,7 @@
                                 <input type="file" id="avatarInput" style="display:none;" accept="image/*" onchange="uploadNewAvatar(this)">
                                 <div class="user-info">
                                     <div class="user-name">${escapeHtml(currentUser.display_name || currentUser.username)}</div>
-                                    <div class="user-status"><i class="fas fa-circle"></i> онлайн</div>
+                                    <div class="user-status ${isOnline ? 'online' : 'offline'}"><i class="fas fa-circle"></i> ${isOnline ? 'онлайн' : 'офлайн'}</div>
                                     ${!currentUser.hide_phone ? `<div class="user-phone"><i class="fas fa-phone"></i> ${escapeHtml(currentUser.phone || '')}</div>` : ''}
                                     ${currentUser.bio ? `<div class="user-bio"><i class="fas fa-quote-left"></i> ${escapeHtml(currentUser.bio)}</div>` : ''}
                                 </div>
@@ -830,11 +1007,12 @@
                 if (!contacts?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-address-book"></i>Нет контактов</div>'; return; }
                 container.innerHTML = contacts.map(c => {
                     const u = c.users;
+                    const isOnline = u.is_online;
                     return `<div class="contact-item" onclick="selectContact('${u.id}')" data-contact-id="${u.id}">
                         <div class="contact-avatar" style="background: ${u.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
                         <div class="contact-info">
                             <div class="contact-name">${escapeHtml(c.nickname || u.display_name || u.username)}</div>
-                            <div class="contact-status ${u.status === 'online' ? 'online' : 'offline'}"><i class="fas fa-circle"></i> ${u.status === 'online' ? 'онлайн' : 'офлайн'}</div>
+                            <div class="contact-status ${isOnline ? 'online' : 'offline'}"><i class="fas fa-circle"></i> ${isOnline ? 'онлайн' : 'офлайн'}</div>
                         </div>
                         <div class="contact-actions">
                             <button class="delete-contact-btn" onclick="event.stopPropagation(); deleteContact('${u.id}')" title="Удалить"><i class="fas fa-trash-alt"></i></button>
@@ -859,15 +1037,17 @@
                 if (!users?.length) { container.innerHTML = '<div class="empty-state"><i class="fas fa-globe"></i>Нет пользователей</div>'; return; }
                 const { data: contacts } = await supabaseClient.from('contacts').select('contact_id').eq('user_id', currentUser.id);
                 const contactIds = new Set(contacts?.map(c => c.contact_id) || []);
-                container.innerHTML = users.map(u => `
-                    <div class="user-item">
+                container.innerHTML = users.map(u => {
+                    const isOnline = u.is_online;
+                    return `<div class="user-item">
                         <div class="user-avatar-small" style="background: ${u.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
                         <div class="user-info-small">
                             <div class="contact-name">${escapeHtml(u.display_name || u.username)}</div>
+                            <div class="contact-status ${isOnline ? 'online' : 'offline'}"><i class="fas fa-circle"></i> ${isOnline ? 'онлайн' : 'офлайн'}</div>
                         </div>
                         ${!contactIds.has(u.id) ? `<button class="add-btn" onclick="addContact('${u.id}')"><i class="fas fa-user-plus"></i> Добавить</button>` : '<span style="color:#8dc63f;"><i class="fas fa-check"></i> в контактах</span>'}
-                    </div>
-                `).join('');
+                    </div>`;
+                }).join('');
             }
             
             window.addContact = async function(contactId) {
@@ -957,11 +1137,7 @@
                         .order('created_at')
                 ]);
                 
-                const textMessages = (messagesRes.data || []).map(m => ({ 
-                    ...m, 
-                    type: 'text'
-                }));
-                
+                const textMessages = (messagesRes.data || []).map(m => ({ ...m, type: 'text' }));
                 const voiceMessages = (voiceMessagesRes.data || []).map(v => ({ 
                     ...v, 
                     type: 'voice', 
@@ -985,13 +1161,14 @@
                 const { data: contact } = await supabaseClient.from('users').select('*').eq('id', contactId).single();
                 const chatArea = document.getElementById('chatArea');
                 const messages = window.currentMessages || [];
+                const isOnline = contact?.is_online;
                 
                 chatArea.innerHTML = `
                     <div class="chat-header">
                         <div class="chat-header-avatar" style="background: ${contact?.avatar_color || '#9b59b6'}"><i class="fas fa-user"></i></div>
                         <div class="chat-header-info">
                             <h3>${escapeHtml(contact?.display_name || contact?.username)}</h3>
-                            <p><i class="fas fa-circle"></i> ${contact?.status === 'online' ? 'онлайн' : 'офлайн'}</p>
+                            <p class="${isOnline ? 'online' : 'offline'}"><i class="fas fa-circle"></i> ${isOnline ? 'онлайн' : 'офлайн'}</p>
                         </div>
                     </div>
                     <div class="messages-container" id="messagesContainer">
@@ -1100,7 +1277,6 @@
                 lastMessagesMap.set(`group_${currentChat}`, JSON.stringify(window.currentMessages));
             };
             
-            // ИСПРАВЛЕННАЯ ФУНКЦИЯ ВОСПРОИЗВЕДЕНИЯ
             window.playVoiceMessage = function(audioUrl) {
                 console.log('🎵 Воспроизведение:', audioUrl);
                 
@@ -1113,7 +1289,7 @@
                 audio.src = audioUrl;
                 audio.controls = false;
                 
-                audio.oncanplay = () => {
+                audio.oncanplaythrough = () => {
                     console.log('✅ Аудио загружено, воспроизводим');
                     audio.play().catch(e => console.error('Play error:', e));
                 };
@@ -1213,6 +1389,11 @@
                             }
                         }
                     }
+                    
+                    // Обновляем статус онлайн в фоне
+                    if (currentUser) {
+                        await updateOnlineStatus(true);
+                    }
                 }, 300);
             }
             
@@ -1290,7 +1471,7 @@
             };
             
             window.logout = async function() {
-                if (currentUser) await supabaseClient.from('users').update({ status: 'offline' }).eq('id', currentUser.id);
+                if (currentUser) await supabaseClient.from('users').update({ is_online: false }).eq('id', currentUser.id);
                 if (autoUpdateInterval) clearInterval(autoUpdateInterval);
                 clearSession(); currentUser = null; currentContact = null; currentChat = null;
                 isMainScreenLoaded = false;
