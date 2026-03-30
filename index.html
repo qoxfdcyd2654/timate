@@ -44,7 +44,7 @@
             transition: transform 0.3s ease;
         }
         
-        /* Мобильная версия */
+        /* Мобильная версия - только для телефонов */
         @media (max-width: 768px) {
             .timate-container {
                 width: 100%;
@@ -58,6 +58,7 @@
                 height: 100%;
                 z-index: 10;
                 transform: translateX(0);
+                transition: transform 0.3s ease;
             }
             .sidebar.hide {
                 transform: translateX(-100%);
@@ -70,6 +71,7 @@
                 height: 100%;
                 z-index: 5;
                 transform: translateX(100%);
+                transition: transform 0.3s ease;
             }
             .chat-area.show {
                 transform: translateX(0);
@@ -92,9 +94,29 @@
                 padding-left: 12px !important;
             }
         }
+        
+        /* Десктопная версия */
         @media (min-width: 769px) {
+            .timate-container {
+                width: 1200px;
+                max-width: 95%;
+                height: 90vh;
+                border-radius: 24px;
+            }
+            .sidebar {
+                position: relative;
+                width: 320px;
+                transform: none !important;
+            }
+            .chat-area {
+                position: relative;
+                transform: none !important;
+            }
             .mobile-back-btn {
                 display: none !important;
+            }
+            .sidebar.hide, .chat-area.show {
+                transform: none !important;
             }
         }
         
@@ -1058,6 +1080,7 @@
                         <div class="chat-info">
                             <div class="chat-name">${escapeHtml(chat.name)}</div>
                             <div class="chat-type">${chat.type === 'group' ? 'Группа' : (chat.is_private ? 'Приватный канал' : 'Публичный канал')}</div>
+                            ${chat.type === 'channel' && chat.is_private ? `<button class="invite-btn" onclick="event.stopPropagation(); inviteToChannel('${chat.id}')" title="Пригласить"><i class="fas fa-user-plus"></i></button>` : ''}
                         </div>
                     </div>`;
                 }).join('');
@@ -1087,6 +1110,42 @@
                 showNotification('Вы подписались на канал');
                 await loadMyChats();
                 if (activeTab === 'public') loadPublicChannels();
+            };
+            
+            window.inviteToChannel = async function(chatId) {
+                const username = prompt('Введите имя пользователя для приглашения:');
+                if (!username) return;
+                
+                const { data: users } = await supabaseClient.from('users').select('id, username, display_name').ilike('username', `%${username}%`).limit(10);
+                if (!users?.length) {
+                    showNotification('❌ Пользователь не найден');
+                    return;
+                }
+                
+                let targetUser = users[0];
+                if (users.length > 1) {
+                    const list = users.map(u => `${u.username} - ${u.display_name}`).join('\n');
+                    const selected = prompt(`Найдено несколько пользователей:\n${list}\nВведите точное имя:`);
+                    targetUser = users.find(u => u.username === selected || u.display_name === selected);
+                    if (!targetUser) {
+                        showNotification('❌ Пользователь не выбран');
+                        return;
+                    }
+                }
+                
+                if (confirm(`Пригласить ${targetUser.display_name || targetUser.username} в чат?`)) {
+                    const { error } = await supabaseClient.from('chat_members').insert({ 
+                        chat_id: chatId, 
+                        user_id: targetUser.id, 
+                        role: 'member' 
+                    });
+                    if (!error) {
+                        showNotification('✅ Приглашение отправлено');
+                        await loadMyChats();
+                    } else {
+                        showNotification('❌ Ошибка: пользователь уже в чате');
+                    }
+                }
             };
             
             window.selectContact = async function(contactId) {
@@ -1217,6 +1276,7 @@
                         <div class="chat-header-info">
                             <h3>${escapeHtml(chat.name)}</h3>
                             <p><i class="fas fa-circle"></i> ${chat.type === 'group' ? 'Группа' : (chat.is_private ? 'Приватный канал' : 'Публичный канал')}</p>
+                            ${chat.type === 'channel' && chat.is_private ? `<button class="invite-btn" onclick="inviteToChannel('${chat.id}')" style="background:#9b59b6;color:white;border:none;padding:4px 12px;border-radius:16px;margin-left:10px;"><i class="fas fa-user-plus"></i> Пригласить</button>` : ''}
                         </div>
                     </div>
                     <div class="messages-container" id="messagesContainer">
