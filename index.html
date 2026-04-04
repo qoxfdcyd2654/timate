@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Timate</title>
-        <link rel="icon" href="https://eiqtdlzsupmaaycwvjhp.supabase.co/storage/v1/object/public/SiteConfigs/SiteIcon.bmp" type="image/bmp">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -28,6 +27,7 @@
             overflow: hidden;
             position: relative;
         }
+        
         /* Десктопная версия */
         .sidebar {
             width: 320px;
@@ -45,7 +45,7 @@
             transition: transform 0.3s ease;
         }
         
-        /* Мобильная версия - только для телефонов */
+        /* Мобильная версия - только на телефонах (ширина ≤ 768px) */
         @media (max-width: 768px) {
             .timate-container {
                 width: 100%;
@@ -55,14 +55,15 @@
                 position: absolute;
                 left: 0;
                 top: 0;
-                width: 100%;
+                width: 280px;
                 height: 100%;
-                z-index: 10;
-                transform: translateX(0);
-                transition: transform 0.3s ease;
-            }
-            .sidebar.hide {
+                z-index: 100;
                 transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            }
+            .sidebar.open {
+                transform: translateX(0);
             }
             .chat-area {
                 position: absolute;
@@ -70,33 +71,32 @@
                 top: 0;
                 width: 100%;
                 height: 100%;
-                z-index: 5;
-                transform: translateX(100%);
-                transition: transform 0.3s ease;
+                z-index: 10;
             }
-            .chat-area.show {
-                transform: translateX(0);
-                z-index: 15;
-            }
-            .mobile-back-btn {
+            .menu-btn {
                 display: flex !important;
+                position: fixed;
+                top: 15px;
+                left: 15px;
+                width: 45px;
+                height: 45px;
+                background: #9b59b6;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                font-size: 24px;
                 align-items: center;
                 justify-content: center;
-                width: 40px;
-                height: 40px;
-                background: none;
-                border: none;
-                font-size: 20px;
-                color: #9b59b6;
                 cursor: pointer;
-                margin-right: 8px;
+                z-index: 200;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             }
             .chat-header {
-                padding-left: 12px !important;
+                padding-left: 60px !important;
             }
         }
         
-        /* Десктопная версия */
+        /* Десктопная версия (ширина > 768px) */
         @media (min-width: 769px) {
             .timate-container {
                 width: 1200px;
@@ -113,11 +113,8 @@
                 position: relative;
                 transform: none !important;
             }
-            .mobile-back-btn {
+            .menu-btn {
                 display: none !important;
-            }
-            .sidebar.hide, .chat-area.show {
-                transform: none !important;
             }
         }
         
@@ -598,31 +595,6 @@
             let privacyAccepted = localStorage.getItem('privacy_accepted') === 'true';
             let activeTab = 'contacts';
             
-            // Мобильная навигация
-            let isMobile = window.innerWidth <= 768;
-            
-            function showChat() {
-                if (isMobile) {
-                    document.querySelector('.sidebar')?.classList.add('hide');
-                    document.querySelector('.chat-area')?.classList.add('show');
-                }
-            }
-            
-            function showContacts() {
-                if (isMobile) {
-                    document.querySelector('.sidebar')?.classList.remove('hide');
-                    document.querySelector('.chat-area')?.classList.remove('show');
-                }
-            }
-            
-            window.addEventListener('resize', () => {
-                isMobile = window.innerWidth <= 768;
-                if (!isMobile) {
-                    document.querySelector('.sidebar')?.classList.remove('hide');
-                    document.querySelector('.chat-area')?.classList.remove('show');
-                }
-            });
-            
             let recognition = null;
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -984,6 +956,7 @@
                         </div>
                         <div class="chat-area" id="chatArea"><div class="empty-state"><i class="fas fa-comment"></i>Выберите чат для общения</div></div>
                     </div>
+                    <button class="menu-btn" id="menuBtn" onclick="toggleSidebar()">☰</button>
                 `;
                 await loadContacts(); await loadAllUsers(); await loadMyChats(); await loadPublicChannels();
                 document.getElementById('contactsList').style.display = activeTab === 'contacts' ? 'block' : 'none';
@@ -992,6 +965,11 @@
                 document.getElementById('publicChannelsList').style.display = activeTab === 'public' ? 'block' : 'none';
                 startAutoUpdate();
             }
+            
+            window.toggleSidebar = function() {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.toggle('open');
+            };
             
             window.uploadNewAvatar = async function(input) {
                 if (input.files && input.files[0]) {
@@ -1081,7 +1059,6 @@
                         <div class="chat-info">
                             <div class="chat-name">${escapeHtml(chat.name)}</div>
                             <div class="chat-type">${chat.type === 'group' ? 'Группа' : (chat.is_private ? 'Приватный канал' : 'Публичный канал')}</div>
-                            ${chat.type === 'channel' && chat.is_private ? `<button class="invite-btn" onclick="event.stopPropagation(); inviteToChannel('${chat.id}')" title="Пригласить"><i class="fas fa-user-plus"></i></button>` : ''}
                         </div>
                     </div>`;
                 }).join('');
@@ -1113,42 +1090,6 @@
                 if (activeTab === 'public') loadPublicChannels();
             };
             
-            window.inviteToChannel = async function(chatId) {
-                const username = prompt('Введите имя пользователя для приглашения:');
-                if (!username) return;
-                
-                const { data: users } = await supabaseClient.from('users').select('id, username, display_name').ilike('username', `%${username}%`).limit(10);
-                if (!users?.length) {
-                    showNotification('❌ Пользователь не найден');
-                    return;
-                }
-                
-                let targetUser = users[0];
-                if (users.length > 1) {
-                    const list = users.map(u => `${u.username} - ${u.display_name}`).join('\n');
-                    const selected = prompt(`Найдено несколько пользователей:\n${list}\nВведите точное имя:`);
-                    targetUser = users.find(u => u.username === selected || u.display_name === selected);
-                    if (!targetUser) {
-                        showNotification('❌ Пользователь не выбран');
-                        return;
-                    }
-                }
-                
-                if (confirm(`Пригласить ${targetUser.display_name || targetUser.username} в чат?`)) {
-                    const { error } = await supabaseClient.from('chat_members').insert({ 
-                        chat_id: chatId, 
-                        user_id: targetUser.id, 
-                        role: 'member' 
-                    });
-                    if (!error) {
-                        showNotification('✅ Приглашение отправлено');
-                        await loadMyChats();
-                    } else {
-                        showNotification('❌ Ошибка: пользователь уже в чате');
-                    }
-                }
-            };
-            
             window.selectContact = async function(contactId) {
                 currentContact = contactId;
                 currentChat = null;
@@ -1163,7 +1104,10 @@
                 await loadMessages(contactId);
                 await renderChat(contactId);
                 
-                showChat();
+                // На мобильных устройствах закрываем меню после выбора контакта
+                if (window.innerWidth <= 768) {
+                    document.querySelector('.sidebar').classList.remove('open');
+                }
             };
             
             window.selectChat = async function(chatId, type) {
@@ -1176,7 +1120,11 @@
                 await loadGroupMessages(chatId);
                 await renderGroupChat(chatId);
                 lastMessagesMap.set(`group_${chatId}`, JSON.stringify(window.currentMessages));
-                showChat();
+                
+                // На мобильных устройствах закрываем меню после выбора чата
+                if (window.innerWidth <= 768) {
+                    document.querySelector('.sidebar').classList.remove('open');
+                }
             };
             
             async function loadMessages(contactId) {
@@ -1214,7 +1162,6 @@
                 
                 chatArea.innerHTML = `
                     <div class="chat-header">
-                        <button class="mobile-back-btn" onclick="showContacts()"><i class="fas fa-arrow-left"></i></button>
                         <div class="chat-header-avatar" style="background: ${contact?.avatar_color || '#9b59b6'}">${avatarHtml}</div>
                         <div class="chat-header-info">
                             <h3>${escapeHtml(contact?.display_name || contact?.username)}</h3>
@@ -1272,12 +1219,10 @@
                 
                 chatArea.innerHTML = `
                     <div class="chat-header">
-                        <button class="mobile-back-btn" onclick="showContacts()"><i class="fas fa-arrow-left"></i></button>
                         <div class="chat-header-avatar" style="background: ${chat.avatar_color || '#8dc63f'}"><i class="fas ${chat.type === 'group' ? 'fa-users' : 'fa-broadcast-tower'}"></i></div>
                         <div class="chat-header-info">
                             <h3>${escapeHtml(chat.name)}</h3>
                             <p><i class="fas fa-circle"></i> ${chat.type === 'group' ? 'Группа' : (chat.is_private ? 'Приватный канал' : 'Публичный канал')}</p>
-                            ${chat.type === 'channel' && chat.is_private ? `<button class="invite-btn" onclick="inviteToChannel('${chat.id}')" style="background:#9b59b6;color:white;border:none;padding:4px 12px;border-radius:16px;margin-left:10px;"><i class="fas fa-user-plus"></i> Пригласить</button>` : ''}
                         </div>
                     </div>
                     <div class="messages-container" id="messagesContainer">
