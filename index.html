@@ -58,6 +58,7 @@
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
                 box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+                background: rgba(255,255,255,0.98);
             }
             .sidebar.open { transform: translateX(0); }
             .chat-area {
@@ -87,6 +88,28 @@
                 box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             }
             .chat-header { padding-left: 60px !important; }
+            .welcome-screen {
+                display: flex !important;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                text-align: center;
+                color: #666;
+            }
+            .welcome-screen i { font-size: 64px; color: #8dc63f; margin-bottom: 20px; }
+            .welcome-screen h3 { font-size: 24px; margin-bottom: 10px; color: #2c3e50; }
+            .welcome-screen p { font-size: 14px; }
+            .welcome-screen button {
+                margin-top: 20px;
+                background: #9b59b6;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 25px;
+                font-size: 16px;
+                cursor: pointer;
+            }
         }
         @media (min-width: 769px) {
             .timate-container {
@@ -105,9 +128,10 @@
                 transform: none !important;
             }
             .menu-btn { display: none !important; }
+            .welcome-screen { display: none; }
         }
         
-        /* Общие стили */
+        /* Остальные стили (такие же как были) */
         .sidebar-header {
             background: #8dc63f;
             padding: 20px;
@@ -564,31 +588,6 @@
             cursor: pointer;
         }
         .error { color: #e74c3c; font-size: 12px; margin-top: 10px; }
-        
-        /* Стили для сессий */
-        .session-item {
-            background: #1a1a2e;
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-left: 4px solid #e94560;
-        }
-        .session-current {
-            border-left-color: #2ecc71;
-            background: #16213e;
-        }
-        .session-device { font-weight: bold; }
-        .session-info { font-size: 12px; color: #aaa; margin-top: 5px; }
-        .terminate-btn {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            padding: 4px 12px;
-            border-radius: 15px;
-            cursor: pointer;
-            font-size: 11px;
-            margin-top: 8px;
-        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -619,7 +618,7 @@
             let isVideoRecording = false;
             let privacyAccepted = localStorage.getItem('privacy_accepted') === 'true';
             let activeTab = 'contacts';
-            let currentSessionToken = null;
+            let isMobile = window.innerWidth <= 768;
             
             let recognition = null;
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -630,159 +629,10 @@
                 recognition.continuous = true;
             }
             
-            // Генерация токена сессии
-            function generateSessionToken() {
-                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                    const r = Math.random() * 16 | 0;
-                    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-                    return v.toString(16);
-                });
-            }
-            
-            // Получение информации об устройстве
-            function getDeviceInfo() {
-                const ua = navigator.userAgent;
-                let deviceType = 'Unknown';
-                let browser = 'Unknown';
-                let deviceName = 'Unknown';
-                
-                if (/mobile/i.test(ua)) deviceType = 'Mobile';
-                else if (/tablet/i.test(ua)) deviceType = 'Tablet';
-                else deviceType = 'Desktop';
-                
-                if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = 'Chrome';
-                else if (/Firefox/i.test(ua)) browser = 'Firefox';
-                else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
-                else if (/Edg/i.test(ua)) browser = 'Edge';
-                
-                deviceName = `${deviceType} (${browser})`;
-                
-                return { deviceType, browser, deviceName };
-            }
-            
-            // Регистрация сессии при входе
-            async function registerSession(userId) {
-                const token = generateSessionToken();
-                const { deviceType, browser, deviceName } = getDeviceInfo();
-                
-                // Получаем IP (через сторонний API)
-                let ip = 'Unknown';
-                let location = 'Unknown';
-                try {
-                    const ipRes = await fetch('https://api.ipify.org?format=json');
-                    const ipData = await ipRes.json();
-                    ip = ipData.ip;
-                    const geoRes = await fetch(`https://ipapi.co/${ip}/json/`);
-                    const geoData = await geoRes.json();
-                    location = `${geoData.city || ''}, ${geoData.country_name || ''}`;
-                } catch(e) {}
-                
-                // Проверяем существующую сессию
-                const { data: existing } = await supabaseClient
-                    .from('sessions')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .eq('is_current', true)
-                    .single();
-                
-                if (existing) {
-                    await supabaseClient
-                        .from('sessions')
-                        .update({ is_current: false })
-                        .eq('id', existing.id);
-                }
-                
-                const { data: newSession, error } = await supabaseClient
-                    .from('sessions')
-                    .insert({
-                        user_id: userId,
-                        session_token: token,
-                        device_name: deviceName,
-                        device_type: deviceType,
-                        browser: browser,
-                        ip: ip,
-                        location: location,
-                        is_current: true
-                    })
-                    .select()
-                    .single();
-                
-                if (error) console.error('Session registration error:', error);
-                else {
-                    currentSessionToken = token;
-                    localStorage.setItem('timate_session_token', token);
-                    
-                    // Проверяем уведомления о новых сессиях
-                    await checkSessionNotifications(userId);
-                }
-            }
-            
-            // Проверка уведомлений о новых сессиях
-            async function checkSessionNotifications(userId) {
-                const { data: notifications } = await supabaseClient
-                    .from('session_notifications')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .eq('is_read', false)
-                    .order('created_at', { ascending: false });
-                
-                if (notifications && notifications.length > 0) {
-                    notifications.forEach(notif => {
-                        showNotification(`🔐 ${notif.message}`);
-                        supabaseClient
-                            .from('session_notifications')
-                            .update({ is_read: true })
-                            .eq('id', notif.id);
-                    });
-                }
-            }
-            
-            // Загрузка активных сессий
-            async function loadSessions() {
-                if (!currentUser) return [];
-                const { data: sessions } = await supabaseClient
-                    .from('sessions')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .order('last_active', { ascending: false });
-                return sessions || [];
-            }
-            
-            // Завершение сессии (удаление)
-            async function terminateSession(sessionId) {
-                if (confirm('Завершить эту сессию? Устройство будет разлогинено.')) {
-                    await supabaseClient
-                        .from('sessions')
-                        .delete()
-                        .eq('id', sessionId);
-                    
-                    // Если завершаем текущую сессию, выходим из аккаунта
-                    const { data: session } = await supabaseClient
-                        .from('sessions')
-                        .select('is_current')
-                        .eq('id', sessionId)
-                        .single();
-                    
-                    if (session && session.is_current) {
-                        alert('Текущая сессия завершена. Вы будете выведены из аккаунта.');
-                        logout();
-                    }
-                    
-                    showNotification('Сессия завершена');
-                    if (activeTab === 'sessions') renderSettingsTab();
-                }
-            }
-            
             async function updateOnlineStatus(isOnline) {
                 if (!currentUser) return;
                 try {
                     await supabaseClient.from('users').update({ is_online: isOnline }).eq('id', currentUser.id);
-                    if (isOnline && currentSessionToken) {
-                        await supabaseClient
-                            .from('sessions')
-                            .update({ last_active: new Date().toISOString() })
-                            .eq('session_token', currentSessionToken);
-                    }
                 } catch (e) { console.error('Ошибка обновления статуса:', e); }
             }
             
@@ -857,7 +707,6 @@
                 } catch (e) { console.error('Compress error:', e); return null; }
             }
             
-            // Отправка видеосообщения
             async function sendVideoMessage(receiverId, videoBlob) {
                 try {
                     const fileName = `video_${currentUser.id}_${Date.now()}.webm`;
@@ -877,7 +726,6 @@
                 } catch (e) { console.error('Exception:', e); return false; }
             }
             
-            // Запись видео
             async function startVideoRecording() {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -1009,13 +857,12 @@
                         requestNotificationPermission();
                         loadMainScreen();
                         setupActivityTracking();
-                        registerSession(user.id);
                     } else { showAuth(); }
                 } catch(e) { showAuth(); }
             } else { showAuth(); }
             
             function saveSession(user) { localStorage.setItem('timate_user', JSON.stringify(user)); }
-            function clearSession() { localStorage.removeItem('timate_user'); localStorage.removeItem('timate_session_token'); }
+            function clearSession() { localStorage.removeItem('timate_user'); }
             function showNotification(msg) {
                 const notif = document.createElement('div');
                 notif.className = 'notification';
@@ -1098,7 +945,6 @@
                 await requestNotificationPermission();
                 await loadMainScreen();
                 setupActivityTracking();
-                await registerSession(currentUser.id);
             };
             
             window.showRegister = async function() {
@@ -1157,7 +1003,6 @@
                 await requestNotificationPermission();
                 await loadMainScreen();
                 setupActivityTracking();
-                await registerSession(currentUser.id);
                 showNotification('✅ Регистрация успешна! Добро пожаловать в Timate!');
             };
             
@@ -1201,7 +1046,16 @@
                             <div id="chatsList" class="chats-list" style="display: none;"></div>
                             <div id="publicChannelsList" class="public-channels-list" style="display: none;"></div>
                         </div>
-                        <div class="chat-area" id="chatArea"><div class="empty-state"><i class="fas fa-comment"></i>Выберите чат для общения</div></div>
+                        <div class="chat-area" id="chatArea">
+                            <div class="empty-state" id="welcomePlaceholder">
+                                <div class="welcome-screen" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center;">
+                                    <i class="fas fa-comment"></i>
+                                    <h3>Добро пожаловать в Timate!</h3>
+                                    <p>Выберите контакт или чат для общения</p>
+                                    <button onclick="document.querySelector('.menu-btn').click()" style="background:#9b59b6; color:white; border:none; padding:12px 24px; border-radius:25px;">📱 Открыть меню</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <button class="menu-btn" id="menuBtn" onclick="toggleSidebar()">☰</button>
                 `;
@@ -1211,6 +1065,12 @@
                 document.getElementById('chatsList').style.display = activeTab === 'chats' ? 'block' : 'none';
                 document.getElementById('publicChannelsList').style.display = activeTab === 'public' ? 'block' : 'none';
                 startAutoUpdate();
+                
+                // Если на телефоне и нет выбранного чата, показываем приветствие
+                if (isMobile && !currentContact && !currentChat) {
+                    const welcomeDiv = document.getElementById('welcomePlaceholder');
+                    if (welcomeDiv) welcomeDiv.style.display = 'flex';
+                }
             }
             
             window.toggleSidebar = function() {
@@ -1352,7 +1212,7 @@
                 await loadMessages(contactId);
                 await renderChat(contactId);
                 
-                if (window.innerWidth <= 768) {
+                if (isMobile) {
                     document.querySelector('.sidebar').classList.remove('open');
                 }
             };
@@ -1368,7 +1228,7 @@
                 await renderGroupChat(chatId);
                 lastMessagesMap.set(`group_${chatId}`, JSON.stringify(window.currentMessages));
                 
-                if (window.innerWidth <= 768) {
+                if (isMobile) {
                     document.querySelector('.sidebar').classList.remove('open');
                 }
             };
@@ -1716,39 +1576,9 @@
                         <button class="save-btn" onclick="saveSettings()"><i class="fas fa-save"></i> Сохранить</button>
                         <button class="cancel-btn" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i> Отмена</button>
                     </div>
-                    <hr style="margin: 20px 0;">
-                    <div style="margin-top: 15px;">
-                        <h4><i class="fas fa-laptop"></i> Активные сессии</h4>
-                        <div id="sessionsList"></div>
-                    </div>
                 `;
                 document.body.appendChild(modal);
-                renderSessionsList();
             };
-            
-            async function renderSessionsList() {
-                const sessions = await loadSessions();
-                const container = document.getElementById('sessionsList');
-                if (!container) return;
-                if (sessions.length === 0) {
-                    container.innerHTML = '<p style="color:#aaa;">Нет активных сессий</p>';
-                    return;
-                }
-                container.innerHTML = sessions.map(s => `
-                    <div class="session-item ${s.is_current ? 'session-current' : ''}">
-                        <div class="session-device"><i class="fas ${s.device_type === 'Mobile' ? 'fa-mobile-alt' : 'fa-desktop'}"></i> ${escapeHtml(s.device_name || 'Неизвестное устройство')}</div>
-                        <div class="session-info">
-                            ${s.browser ? `<i class="fas fa-globe"></i> ${escapeHtml(s.browser)}<br>` : ''}
-                            ${s.ip && s.ip !== 'Unknown' ? `<i class="fas fa-network-wired"></i> ${escapeHtml(s.ip)}<br>` : ''}
-                            ${s.location && s.location !== 'Unknown' ? `<i class="fas fa-map-marker-alt"></i> ${escapeHtml(s.location)}<br>` : ''}
-                            <i class="fas fa-clock"></i> Последняя активность: ${new Date(s.last_active).toLocaleString()}
-                        </div>
-                        ${!s.is_current ? `<button class="terminate-btn" onclick="terminateSession('${s.id}')"><i class="fas fa-trash-alt"></i> Завершить сессию</button>` : '<span style="font-size:11px; color:#2ecc71;"><i class="fas fa-check-circle"></i> Текущее устройство</span>'}
-                    </div>
-                `).join('');
-            }
-            
-            window.terminateSession = terminateSession;
             
             window.changeAvatarFromSettings = async function(input) {
                 if (input.files && input.files[0]) {
