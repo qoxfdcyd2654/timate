@@ -963,45 +963,50 @@
                 `;
             }
             
-            window.login = async function() {
-                if (!privacyAccepted) { showPrivacyPolicy(); return; }
-                const phone = document.getElementById('authPhone').value;
-                const password = document.getElementById('authPassword').value;
-                const countryCode = document.getElementById('authCountryCode').value;
-                const phoneDigits = phone.replace(/[^0-9]/g, '');
-                if (!phoneDigits || phoneDigits.length < 5) { document.getElementById('authError').textContent = '❌ Введите корректный номер телефона'; return; }
-                const fullPhone = countryCode + phoneDigits;
-                
-                // Получаем пользователя
-                const { data: user } = await supabaseClient
-                    .from('users')
-                    .select('*')
-                    .eq('phone', fullPhone)
-                    .single();
-                
-                if (!user) {
-                    document.getElementById('authError').textContent = '❌ Пользователь не найден';
-                    return;
-                }
-                
-                // Проверяем пароль через хеш
-                const hashedInput = await hashPassword(password);
-                if (user.encrypted_password !== hashedInput) {
-                    document.getElementById('authError').textContent = '❌ Неверный пароль';
-                    return;
-                }
-                
-                currentUser = user;
-                saveSession(currentUser);
-                
-                // Генерируем ключ шифрования для сессии
-                userEncryptionKey = await generateEncryptionKey();
-                
-                await supabaseClient.from('users').update({ is_online: true }).eq('id', currentUser.id);
-                await requestNotificationPermission();
-                await loadMainScreen();
-                setupActivityTracking();
-            };
+window.login = async function() {
+    if (!privacyAccepted) { showPrivacyPolicy(); return; }
+    const phone = document.getElementById('authPhone').value;
+    const password = document.getElementById('authPassword').value;
+    const countryCode = document.getElementById('authCountryCode').value;
+    const phoneDigits = phone.replace(/[^0-9]/g, '');
+    if (!phoneDigits || phoneDigits.length < 5) { document.getElementById('authError').textContent = '❌ Введите корректный номер телефона'; return; }
+    const fullPhone = countryCode + phoneDigits;
+    
+    // Получаем пользователя
+    const { data: user, error } = await supabaseClient
+        .from('users')
+        .select('*')
+        .eq('phone', fullPhone)
+        .maybeSingle();  // используем maybeSingle вместо single
+    
+    if (error) {
+        console.error('Ошибка запроса:', error);
+        document.getElementById('authError').textContent = '❌ Ошибка сервера';
+        return;
+    }
+    
+    if (!user) {
+        document.getElementById('authError').textContent = '❌ Пользователь не найден';
+        return;
+    }
+    
+    // Проверяем пароль (сравниваем с тем полем, где он реально хранится)
+    // Пробуем оба варианта: password или encrypted_password
+    const storedPassword = user.password || user.encrypted_password;
+    
+    if (storedPassword !== password) {
+        document.getElementById('authError').textContent = '❌ Неверный пароль';
+        return;
+    }
+    
+    currentUser = user;
+    saveSession(currentUser);
+    
+    await supabaseClient.from('users').update({ is_online: true }).eq('id', currentUser.id);
+    await requestNotificationPermission();
+    await loadMainScreen();
+    setupActivityTracking();
+};
             
             window.showRegister = async function() {
                 if (!privacyAccepted) { showPrivacyPolicy(); return; }
