@@ -45,12 +45,9 @@
             transition: transform 0.3s ease;
         }
         
-        /* Мобильная версия - только на телефонах (ширина ≤ 768px) */
+        /* Мобильная версия */
         @media (max-width: 768px) {
-            .timate-container {
-                width: 100%;
-                border-radius: 0;
-            }
+            .timate-container { width: 100%; border-radius: 0; }
             .sidebar {
                 position: absolute;
                 left: 0;
@@ -62,9 +59,7 @@
                 transition: transform 0.3s ease;
                 box-shadow: 2px 0 10px rgba(0,0,0,0.1);
             }
-            .sidebar.open {
-                transform: translateX(0);
-            }
+            .sidebar.open { transform: translateX(0); }
             .chat-area {
                 position: absolute;
                 left: 0;
@@ -91,12 +86,8 @@
                 z-index: 200;
                 box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             }
-            .chat-header {
-                padding-left: 60px !important;
-            }
+            .chat-header { padding-left: 60px !important; }
         }
-        
-        /* Десктопная версия (ширина > 768px) */
         @media (min-width: 769px) {
             .timate-container {
                 width: 1200px;
@@ -113,11 +104,10 @@
                 position: relative;
                 transform: none !important;
             }
-            .menu-btn {
-                display: none !important;
-            }
+            .menu-btn { display: none !important; }
         }
         
+        /* Общие стили */
         .sidebar-header {
             background: #8dc63f;
             padding: 20px;
@@ -150,11 +140,7 @@
             overflow: hidden;
             flex-shrink: 0;
         }
-        .user-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .user-info { flex: 1; min-width: 0; }
         .user-name { font-weight: bold; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .user-status {
@@ -166,8 +152,6 @@
         .user-status.online { color: #2ecc71; }
         .user-status.offline { color: #999; }
         .user-status i { font-size: 8px; }
-        .user-phone { font-size: 10px; color: #999; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .user-bio { font-size: 11px; color: #666; margin-top: 2px; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .settings-btn, .logout-btn {
             background: none;
             border: none;
@@ -250,11 +234,7 @@
             background: #9b59b6;
             overflow: hidden;
         }
-        .contact-avatar img, .user-avatar-small img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .contact-avatar img, .user-avatar-small img { width: 100%; height: 100%; object-fit: cover; }
         .contact-info, .user-info-small, .chat-info { flex: 1; min-width: 0; }
         .contact-name, .chat-name { font-weight: 600; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .contact-status {
@@ -272,7 +252,7 @@
             margin-left: auto;
             flex-shrink: 0;
         }
-        .call-btn, .delete-contact-btn {
+        .call-btn, .delete-contact-btn, .video-call-btn {
             background: none;
             border: none;
             cursor: pointer;
@@ -282,8 +262,9 @@
             transition: background 0.2s;
             color: #666;
         }
-        .call-btn:hover, .delete-contact-btn:hover { background: #f0f0f0; }
+        .call-btn:hover, .delete-contact-btn:hover, .video-call-btn:hover { background: #f0f0f0; }
         .delete-contact-btn { color: #e74c3c; }
+        .video-call-btn { color: #9b59b6; }
         .add-btn {
             background: #9b59b6;
             color: white;
@@ -327,11 +308,7 @@
             overflow: hidden;
             flex-shrink: 0;
         }
-        .chat-header-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .chat-header-avatar img { width: 100%; height: 100%; object-fit: cover; }
         .chat-header-info { flex: 1; min-width: 0; }
         .chat-header-info h3 { color: #2c3e50; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .chat-header-info p {
@@ -381,46 +358,49 @@
             gap: 4px;
         }
         .message-time i { font-size: 10px; margin-left: 4px; }
-        .voice-message {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-        }
-        .voice-play-btn {
-            width: 36px;
-            height: 36px;
+        
+        /* Видеосообщение (кружок) */
+        .video-message {
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
-            background: rgba(0,0,0,0.1);
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            background: #333;
+        }
+        .video-message video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .video-message .play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
+            color: white;
+            font-size: 20px;
         }
-        .voice-wave {
-            flex: 1;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            gap: 3px;
+        .video-message:hover .play-overlay { background: rgba(0,0,0,0.7); }
+        .video-duration {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 4px;
         }
-        .voice-wave span {
-            width: 3px;
-            background: currentColor;
-            border-radius: 2px;
-            animation: wave 0.5s infinite ease-in-out;
-        }
-        .voice-wave span:nth-child(1) { height: 12px; animation-delay: 0s; }
-        .voice-wave span:nth-child(2) { height: 20px; animation-delay: 0.1s; }
-        .voice-wave span:nth-child(3) { height: 28px; animation-delay: 0.2s; }
-        .voice-wave span:nth-child(4) { height: 20px; animation-delay: 0.3s; }
-        .voice-wave span:nth-child(5) { height: 12px; animation-delay: 0.4s; }
-        @keyframes wave {
-            0%, 100% { transform: scaleY(1); }
-            50% { transform: scaleY(0.5); }
-        }
-        .voice-duration { font-size: 12px; opacity: 0.7; min-width: 40px; }
-        .voice-text { font-size: 12px; opacity: 0.8; margin-top: 4px; font-style: italic; }
+        
         .input-area {
             padding: 15px 20px;
             background: white;
@@ -449,6 +429,20 @@
         }
         .voice-record-btn.recording {
             background: #c0392b;
+            animation: pulse 1s infinite;
+        }
+        .video-record-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #9b59b6;
+            color: white;
+            border: none;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .video-record-btn.recording {
+            background: #8e44ad;
             animation: pulse 1s infinite;
         }
         @keyframes pulse {
@@ -488,6 +482,7 @@
             overflow-y: auto;
         }
         .modal-content h3 { margin-bottom: 20px; color: #8dc63f; }
+        .modal-content h3 i { margin-right: 8px; }
         .modal-content input, .modal-content select, .modal-content textarea {
             width: 100%;
             padding: 12px;
@@ -511,6 +506,8 @@
         }
         .save-btn { background: #8dc63f; color: white; }
         .cancel-btn { background: #e74c3c; color: white; }
+        .accept-btn { background: #9b59b6; color: white; }
+        .danger-btn { background: #e74c3c; color: white; }
         .empty-state { text-align: center; padding: 30px; color: #999; }
         .empty-state i { font-size: 48px; margin-bottom: 15px; display: block; color: #ccc; }
         .notification {
@@ -567,6 +564,31 @@
             cursor: pointer;
         }
         .error { color: #e74c3c; font-size: 12px; margin-top: 10px; }
+        
+        /* Стили для сессий */
+        .session-item {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #e94560;
+        }
+        .session-current {
+            border-left-color: #2ecc71;
+            background: #16213e;
+        }
+        .session-device { font-weight: bold; }
+        .session-info { font-size: 12px; color: #aaa; margin-top: 5px; }
+        .terminate-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-top: 8px;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -592,8 +614,12 @@
             let audioChunks = [];
             let isRecording = false;
             let currentAudio = null;
+            let videoRecorder = null;
+            let videoChunks = [];
+            let isVideoRecording = false;
             let privacyAccepted = localStorage.getItem('privacy_accepted') === 'true';
             let activeTab = 'contacts';
+            let currentSessionToken = null;
             
             let recognition = null;
             if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -604,10 +630,159 @@
                 recognition.continuous = true;
             }
             
+            // Генерация токена сессии
+            function generateSessionToken() {
+                return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    const r = Math.random() * 16 | 0;
+                    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+            }
+            
+            // Получение информации об устройстве
+            function getDeviceInfo() {
+                const ua = navigator.userAgent;
+                let deviceType = 'Unknown';
+                let browser = 'Unknown';
+                let deviceName = 'Unknown';
+                
+                if (/mobile/i.test(ua)) deviceType = 'Mobile';
+                else if (/tablet/i.test(ua)) deviceType = 'Tablet';
+                else deviceType = 'Desktop';
+                
+                if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = 'Chrome';
+                else if (/Firefox/i.test(ua)) browser = 'Firefox';
+                else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
+                else if (/Edg/i.test(ua)) browser = 'Edge';
+                
+                deviceName = `${deviceType} (${browser})`;
+                
+                return { deviceType, browser, deviceName };
+            }
+            
+            // Регистрация сессии при входе
+            async function registerSession(userId) {
+                const token = generateSessionToken();
+                const { deviceType, browser, deviceName } = getDeviceInfo();
+                
+                // Получаем IP (через сторонний API)
+                let ip = 'Unknown';
+                let location = 'Unknown';
+                try {
+                    const ipRes = await fetch('https://api.ipify.org?format=json');
+                    const ipData = await ipRes.json();
+                    ip = ipData.ip;
+                    const geoRes = await fetch(`https://ipapi.co/${ip}/json/`);
+                    const geoData = await geoRes.json();
+                    location = `${geoData.city || ''}, ${geoData.country_name || ''}`;
+                } catch(e) {}
+                
+                // Проверяем существующую сессию
+                const { data: existing } = await supabaseClient
+                    .from('sessions')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .eq('is_current', true)
+                    .single();
+                
+                if (existing) {
+                    await supabaseClient
+                        .from('sessions')
+                        .update({ is_current: false })
+                        .eq('id', existing.id);
+                }
+                
+                const { data: newSession, error } = await supabaseClient
+                    .from('sessions')
+                    .insert({
+                        user_id: userId,
+                        session_token: token,
+                        device_name: deviceName,
+                        device_type: deviceType,
+                        browser: browser,
+                        ip: ip,
+                        location: location,
+                        is_current: true
+                    })
+                    .select()
+                    .single();
+                
+                if (error) console.error('Session registration error:', error);
+                else {
+                    currentSessionToken = token;
+                    localStorage.setItem('timate_session_token', token);
+                    
+                    // Проверяем уведомления о новых сессиях
+                    await checkSessionNotifications(userId);
+                }
+            }
+            
+            // Проверка уведомлений о новых сессиях
+            async function checkSessionNotifications(userId) {
+                const { data: notifications } = await supabaseClient
+                    .from('session_notifications')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .eq('is_read', false)
+                    .order('created_at', { ascending: false });
+                
+                if (notifications && notifications.length > 0) {
+                    notifications.forEach(notif => {
+                        showNotification(`🔐 ${notif.message}`);
+                        supabaseClient
+                            .from('session_notifications')
+                            .update({ is_read: true })
+                            .eq('id', notif.id);
+                    });
+                }
+            }
+            
+            // Загрузка активных сессий
+            async function loadSessions() {
+                if (!currentUser) return [];
+                const { data: sessions } = await supabaseClient
+                    .from('sessions')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('last_active', { ascending: false });
+                return sessions || [];
+            }
+            
+            // Завершение сессии (удаление)
+            async function terminateSession(sessionId) {
+                if (confirm('Завершить эту сессию? Устройство будет разлогинено.')) {
+                    await supabaseClient
+                        .from('sessions')
+                        .delete()
+                        .eq('id', sessionId);
+                    
+                    // Если завершаем текущую сессию, выходим из аккаунта
+                    const { data: session } = await supabaseClient
+                        .from('sessions')
+                        .select('is_current')
+                        .eq('id', sessionId)
+                        .single();
+                    
+                    if (session && session.is_current) {
+                        alert('Текущая сессия завершена. Вы будете выведены из аккаунта.');
+                        logout();
+                    }
+                    
+                    showNotification('Сессия завершена');
+                    if (activeTab === 'sessions') renderSettingsTab();
+                }
+            }
+            
             async function updateOnlineStatus(isOnline) {
                 if (!currentUser) return;
                 try {
                     await supabaseClient.from('users').update({ is_online: isOnline }).eq('id', currentUser.id);
+                    if (isOnline && currentSessionToken) {
+                        await supabaseClient
+                            .from('sessions')
+                            .update({ last_active: new Date().toISOString() })
+                            .eq('session_token', currentSessionToken);
+                    }
                 } catch (e) { console.error('Ошибка обновления статуса:', e); }
             }
             
@@ -680,6 +855,75 @@
                     const { data: urlData } = supabaseClient.storage.from('avatars').getPublicUrl(fileName);
                     return urlData.publicUrl;
                 } catch (e) { console.error('Compress error:', e); return null; }
+            }
+            
+            // Отправка видеосообщения
+            async function sendVideoMessage(receiverId, videoBlob) {
+                try {
+                    const fileName = `video_${currentUser.id}_${Date.now()}.webm`;
+                    const { error: uploadError } = await supabaseClient.storage.from('video_messages').upload(fileName, videoBlob);
+                    if (uploadError) { console.error('Upload error:', uploadError); showNotification('Ошибка загрузки видео'); return false; }
+                    const { data: urlData } = supabaseClient.storage.from('video_messages').getPublicUrl(fileName);
+                    const { error: insertError } = await supabaseClient
+                        .from('video_messages')
+                        .insert({
+                            from_user_id: currentUser.id,
+                            to_user_id: receiverId,
+                            video_url: urlData.publicUrl,
+                            duration: Math.round(videoBlob.size / 1000)
+                        });
+                    if (insertError) { console.error('Insert error:', insertError); showNotification('Ошибка сохранения видео'); return false; }
+                    return true;
+                } catch (e) { console.error('Exception:', e); return false; }
+            }
+            
+            // Запись видео
+            async function startVideoRecording() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    videoRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+                    videoChunks = [];
+                    videoRecorder.ondataavailable = (event) => { if (event.data.size > 0) videoChunks.push(event.data); };
+                    videoRecorder.onstop = async () => {
+                        const videoBlob = new Blob(videoChunks, { type: 'video/webm' });
+                        stream.getTracks().forEach(track => track.stop());
+                        if (videoBlob.size < 10000) { showNotification('❌ Слишком короткое видео'); return; }
+                        showNotification('📹 Отправка видео...');
+                        if (currentContact) {
+                            const success = await sendVideoMessage(currentContact, videoBlob);
+                            if (success) {
+                                showNotification('✅ Видеосообщение отправлено');
+                                await loadMessages(currentContact);
+                                await renderChat(currentContact);
+                                lastMessagesMap.set(`private_${currentContact}`, JSON.stringify(window.currentMessages));
+                            }
+                        }
+                    };
+                    videoRecorder.start(1000);
+                    isVideoRecording = true;
+                    updateVideoRecordButton(true);
+                    showNotification('🎥 Запись видео началась...');
+                } catch(e) {
+                    console.error('Камера не доступна:', e);
+                    showNotification('❌ Нет доступа к камере');
+                }
+            }
+            
+            function stopVideoRecording() {
+                if (videoRecorder && isVideoRecording) {
+                    videoRecorder.stop();
+                    isVideoRecording = false;
+                    updateVideoRecordButton(false);
+                    showNotification('⏹️ Запись видео остановлена');
+                }
+            }
+            
+            function updateVideoRecordButton(recording) {
+                const btn = document.getElementById('videoRecordBtn');
+                if (btn) {
+                    if (recording) { btn.classList.add('recording'); btn.innerHTML = '<i class="fas fa-stop"></i>'; }
+                    else { btn.classList.remove('recording'); btn.innerHTML = '<i class="fas fa-video"></i>'; }
+                }
             }
             
             async function sendVoiceMessage(receiverId, audioBlob, text) {
@@ -765,12 +1009,13 @@
                         requestNotificationPermission();
                         loadMainScreen();
                         setupActivityTracking();
+                        registerSession(user.id);
                     } else { showAuth(); }
                 } catch(e) { showAuth(); }
             } else { showAuth(); }
             
             function saveSession(user) { localStorage.setItem('timate_user', JSON.stringify(user)); }
-            function clearSession() { localStorage.removeItem('timate_user'); }
+            function clearSession() { localStorage.removeItem('timate_user'); localStorage.removeItem('timate_session_token'); }
             function showNotification(msg) {
                 const notif = document.createElement('div');
                 notif.className = 'notification';
@@ -853,6 +1098,7 @@
                 await requestNotificationPermission();
                 await loadMainScreen();
                 setupActivityTracking();
+                await registerSession(currentUser.id);
             };
             
             window.showRegister = async function() {
@@ -911,6 +1157,7 @@
                 await requestNotificationPermission();
                 await loadMainScreen();
                 setupActivityTracking();
+                await registerSession(currentUser.id);
                 showNotification('✅ Регистрация успешна! Добро пожаловать в Timate!');
             };
             
@@ -1006,6 +1253,7 @@
                         <div class="contact-actions">
                             <button class="delete-contact-btn" onclick="event.stopPropagation(); deleteContact('${u.id}')" title="Удалить"><i class="fas fa-trash-alt"></i></button>
                             <button class="call-btn" onclick="event.stopPropagation(); startVoiceCall('${u.id}')" title="Голосовое сообщение"><i class="fas fa-microphone"></i></button>
+                            <button class="video-call-btn" onclick="event.stopPropagation(); startVideoCall('${u.id}')" title="Видеосообщение (кружок)"><i class="fas fa-video"></i></button>
                         </div>
                     </div>`;
                 }).join('');
@@ -1104,7 +1352,6 @@
                 await loadMessages(contactId);
                 await renderChat(contactId);
                 
-                // На мобильных устройствах закрываем меню после выбора контакта
                 if (window.innerWidth <= 768) {
                     document.querySelector('.sidebar').classList.remove('open');
                 }
@@ -1121,22 +1368,23 @@
                 await renderGroupChat(chatId);
                 lastMessagesMap.set(`group_${chatId}`, JSON.stringify(window.currentMessages));
                 
-                // На мобильных устройствах закрываем меню после выбора чата
                 if (window.innerWidth <= 768) {
                     document.querySelector('.sidebar').classList.remove('open');
                 }
             };
             
             async function loadMessages(contactId) {
-                const [messagesRes, voiceMessagesRes] = await Promise.all([
+                const [messagesRes, voiceMessagesRes, videoMessagesRes] = await Promise.all([
                     supabaseClient.from('messages').select('*').or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${contactId}),and(from_user_id.eq.${contactId},to_user_id.eq.${currentUser.id})`).order('created_at'),
-                    supabaseClient.from('calls').select('*').or(`and(caller_id.eq.${currentUser.id},receiver_id.eq.${contactId}),and(caller_id.eq.${contactId},receiver_id.eq.${currentUser.id})`).order('created_at')
+                    supabaseClient.from('calls').select('*').or(`and(caller_id.eq.${currentUser.id},receiver_id.eq.${contactId}),and(caller_id.eq.${contactId},receiver_id.eq.${currentUser.id})`).order('created_at'),
+                    supabaseClient.from('video_messages').select('*').or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${contactId}),and(from_user_id.eq.${contactId},to_user_id.eq.${currentUser.id})`).order('created_at')
                 ]);
                 
                 const textMessages = (messagesRes.data || []).map(m => ({ ...m, type: 'text', delivered: m.delivered || false, read_at: m.read_at }));
                 const voiceMessages = (voiceMessagesRes.data || []).map(v => ({ ...v, type: 'voice', from_user_id: v.caller_id, to_user_id: v.receiver_id, content: v.text || '🎤 Голосовое сообщение', audio_url: v.audio_url, delivered: true, read_at: null }));
+                const videoMessages = (videoMessagesRes.data || []).map(v => ({ ...v, type: 'video', from_user_id: v.from_user_id, to_user_id: v.to_user_id, video_url: v.video_url, duration: v.duration, delivered: true, read_at: null }));
                 
-                const allMessages = [...textMessages, ...voiceMessages];
+                const allMessages = [...textMessages, ...voiceMessages, ...videoMessages];
                 allMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
                 window.currentMessages = allMessages;
             }
@@ -1151,6 +1399,18 @@
                 if (msg.read_at) return '<i class="fas fa-check-double" style="color:#2ecc71;"></i>';
                 if (msg.delivered) return '<i class="fas fa-check-double" style="color:#999;"></i>';
                 return '<i class="fas fa-check" style="color:#999;"></i>';
+            }
+            
+            function playVideoMessage(videoUrl) {
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content" style="text-align:center;">
+                        <video src="${videoUrl}" controls autoplay style="width:100%; max-width:300px; border-radius:12px;"></video>
+                        <button onclick="this.closest('.modal').remove()" style="margin-top:15px;">Закрыть</button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
             }
             
             async function renderChat(contactId) {
@@ -1170,7 +1430,23 @@
                     </div>
                     <div class="messages-container" id="messagesContainer">
                         ${messages.length === 0 ? '<div class="empty-state"><i class="fas fa-comment"></i>Нет сообщений</div>' : messages.map(msg => {
-                            if (msg.type === 'voice') {
+                            if (msg.type === 'video') {
+                                return `
+                                    <div class="message ${msg.from_user_id === currentUser.id ? 'out' : 'in'}">
+                                        <div class="message-bubble" style="padding:0; overflow:hidden;">
+                                            <div class="video-message" onclick="playVideoMessage('${msg.video_url}')">
+                                                <video src="${msg.video_url}"></video>
+                                                <div class="play-overlay"><i class="fas fa-play"></i></div>
+                                                <div class="video-duration">${msg.duration || 0} сек</div>
+                                            </div>
+                                            <div class="message-time" style="padding:5px;">
+                                                <i class="far fa-clock"></i> ${new Date(msg.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                                                ${getStatusIcon(msg)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            } else if (msg.type === 'voice') {
                                 return `
                                     <div class="message ${msg.from_user_id === currentUser.id ? 'out' : 'in'}">
                                         <div class="message-bubble">
@@ -1205,6 +1481,7 @@
                     <div class="input-area">
                         <input type="text" id="messageInput" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') sendTextMessage()">
                         <button class="voice-record-btn" id="voiceRecordBtn" onclick="toggleVoiceRecording()"><i class="fas fa-microphone"></i></button>
+                        <button class="video-record-btn" id="videoRecordBtn" onclick="toggleVideoRecording()"><i class="fas fa-video"></i></button>
                         <button class="send-btn" onclick="sendTextMessage()"><i class="fas fa-paper-plane"></i></button>
                     </div>
                 `;
@@ -1250,9 +1527,19 @@
                 setTimeout(() => { const btn = document.getElementById('voiceRecordBtn'); if (btn) btn.click(); }, 500);
             };
             
+            window.startVideoCall = function(contactId) {
+                selectContact(contactId);
+                setTimeout(() => { const btn = document.getElementById('videoRecordBtn'); if (btn) btn.click(); }, 500);
+            };
+            
             window.toggleVoiceRecording = function() {
                 if (!isRecording) startRecording();
                 else stopRecording();
+            };
+            
+            window.toggleVideoRecording = function() {
+                if (!isVideoRecording) startVideoRecording();
+                else stopVideoRecording();
             };
             
             window.sendTextMessage = async function() {
@@ -1343,7 +1630,7 @@
                                 const lastMsg = newMessages[newMessages.length - 1];
                                 if (lastMsg && lastMsg.from_user_id !== currentUser.id) {
                                     const { data: sender } = await supabaseClient.from('users').select('display_name').eq('id', lastMsg.from_user_id).single();
-                                    sendPushNotification(`💬 ${sender?.display_name || 'Пользователь'}`, lastMsg.type === 'voice' ? '🎤 Голосовое сообщение' : lastMsg.content);
+                                    sendPushNotification(`💬 ${sender?.display_name || 'Пользователь'}`, lastMsg.type === 'voice' ? '🎤 Голосовое сообщение' : (lastMsg.type === 'video' ? '📹 Видеосообщение' : lastMsg.content));
                                 }
                             }
                         }
@@ -1429,9 +1716,39 @@
                         <button class="save-btn" onclick="saveSettings()"><i class="fas fa-save"></i> Сохранить</button>
                         <button class="cancel-btn" onclick="this.closest('.modal').remove()"><i class="fas fa-times"></i> Отмена</button>
                     </div>
+                    <hr style="margin: 20px 0;">
+                    <div style="margin-top: 15px;">
+                        <h4><i class="fas fa-laptop"></i> Активные сессии</h4>
+                        <div id="sessionsList"></div>
+                    </div>
                 `;
                 document.body.appendChild(modal);
+                renderSessionsList();
             };
+            
+            async function renderSessionsList() {
+                const sessions = await loadSessions();
+                const container = document.getElementById('sessionsList');
+                if (!container) return;
+                if (sessions.length === 0) {
+                    container.innerHTML = '<p style="color:#aaa;">Нет активных сессий</p>';
+                    return;
+                }
+                container.innerHTML = sessions.map(s => `
+                    <div class="session-item ${s.is_current ? 'session-current' : ''}">
+                        <div class="session-device"><i class="fas ${s.device_type === 'Mobile' ? 'fa-mobile-alt' : 'fa-desktop'}"></i> ${escapeHtml(s.device_name || 'Неизвестное устройство')}</div>
+                        <div class="session-info">
+                            ${s.browser ? `<i class="fas fa-globe"></i> ${escapeHtml(s.browser)}<br>` : ''}
+                            ${s.ip && s.ip !== 'Unknown' ? `<i class="fas fa-network-wired"></i> ${escapeHtml(s.ip)}<br>` : ''}
+                            ${s.location && s.location !== 'Unknown' ? `<i class="fas fa-map-marker-alt"></i> ${escapeHtml(s.location)}<br>` : ''}
+                            <i class="fas fa-clock"></i> Последняя активность: ${new Date(s.last_active).toLocaleString()}
+                        </div>
+                        ${!s.is_current ? `<button class="terminate-btn" onclick="terminateSession('${s.id}')"><i class="fas fa-trash-alt"></i> Завершить сессию</button>` : '<span style="font-size:11px; color:#2ecc71;"><i class="fas fa-check-circle"></i> Текущее устройство</span>'}
+                    </div>
+                `).join('');
+            }
+            
+            window.terminateSession = terminateSession;
             
             window.changeAvatarFromSettings = async function(input) {
                 if (input.files && input.files[0]) {
